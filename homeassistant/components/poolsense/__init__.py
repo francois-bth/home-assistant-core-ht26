@@ -23,7 +23,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: PoolSenseConfigEntry) ->
         aiohttp_client.async_get_clientsession(hass),
         entry.data[CONF_EMAIL],
         entry.data[CONF_PASSWORD],
-        None,
     )
     auth_valid = await poolsense.test_poolsense_credentials()
 

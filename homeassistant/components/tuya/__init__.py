@@ -29,7 +29,7 @@ logging.getLogger("tuya_sharing").setLevel(logging.CRITICAL)
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Tuya Services."""
-    async_setup_services(hass)
+    await async_setup_services(hass)
 
     return True
 

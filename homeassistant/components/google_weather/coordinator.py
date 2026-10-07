@@ -3,7 +3,6 @@
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from datetime import timedelta
-from functools import partial
 import logging
 from typing import TypeVar, override
 
@@ -28,10 +27,6 @@ from homeassistant.helpers.update_coordinator import (
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-
-# The API returns at most 24 hourly records per request, so asking for more than
-# that costs an extra request per update. Keep it to a single page.
-HOURLY_FORECAST_HOURS = 24
 
 T = TypeVar(
     "T",
@@ -187,5 +182,5 @@ class GoogleWeatherHourlyForecastCoordinator(
             subentry,
             "hourly weather forecast",
             timedelta(hours=1),
-            partial(api.async_get_hourly_forecast, hours=HOURLY_FORECAST_HOURS),
+            api.async_get_hourly_forecast,
         )

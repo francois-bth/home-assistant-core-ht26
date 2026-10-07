@@ -4,12 +4,13 @@ import http
 import time
 from unittest.mock import patch
 
+from aiohttp.client_exceptions import ClientError
 import pytest
 
-from homeassistant.components.youtube.const import CONF_CHANNELS, DOMAIN
+from homeassistant.components.youtube import DOMAIN
+from homeassistant.components.youtube.const import CONF_CHANNELS
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import OAuth2TokenRequestConnectionError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
@@ -110,7 +111,7 @@ async def test_expired_token_refresh_client_error(
 
     with patch(
         "homeassistant.components.youtube.OAuth2Session.async_ensure_token_valid",
-        side_effect=OAuth2TokenRequestConnectionError(domain=DOMAIN),
+        side_effect=ClientError,
     ):
         await setup_integration()
 

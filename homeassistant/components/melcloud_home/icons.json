@@ -44,9 +44,6 @@
       }
     },
     "sensor": {
-      "outdoor_temperature": {
-        "default": "mdi:thermometer"
-      },
       "room_temperature": {
         "default": "mdi:home-thermometer"
       },

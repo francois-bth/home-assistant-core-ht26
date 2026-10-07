@@ -2,7 +2,7 @@
 
 import logging
 
-from pymadvr.madvr import Madvr
+from madvr.madvr import Madvr
 
 from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import Event, HomeAssistant
@@ -18,6 +18,7 @@ async def async_handle_unload(coordinator: MadVRCoordinator) -> None:
     """Handle unload."""
     _LOGGER.debug("Integration unloading")
     coordinator.client.stop()
+    await coordinator.client.async_cancel_tasks()
     _LOGGER.debug("Integration closing connection")
     await coordinator.client.close_connection()
     _LOGGER.debug("Unloaded")

@@ -2,6 +2,7 @@
 
 from typing import Any, override
 
+from aioflo import async_get_api
 from aioflo.errors import RequestError
 import voluptuous as vol
 
@@ -9,30 +10,27 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from . import async_get_flo_api
-from .const import CONF_USE_SSO, DOMAIN, LOGGER
+from .const import DOMAIN, LOGGER
 
 DATA_SCHEMA = vol.Schema(
     {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str}
 )
 
 
-async def validate_input(hass: HomeAssistant, data) -> bool:
+async def validate_input(hass: HomeAssistant, data):
     """Validate the user input allows us to connect.
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
-    Returns True if Moen SSO was used.
     """
 
+    session = async_get_clientsession(hass)
     try:
-        _api, used_sso = await async_get_flo_api(
-            hass, data[CONF_USERNAME], data[CONF_PASSWORD]
-        )
+        await async_get_api(data[CONF_USERNAME], data[CONF_PASSWORD], session=session)
     except RequestError as request_error:
         LOGGER.error("Error connecting to the Flo API: %s", request_error)
         raise CannotConnect from request_error
-    return used_sso
 
 
 class FloConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -50,12 +48,9 @@ class FloConfigFlow(ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(user_input[CONF_USERNAME])
             self._abort_if_unique_id_configured()
             try:
-                used_sso = await validate_input(self.hass, user_input)
-                entry_data = dict(user_input)
-                if used_sso:
-                    entry_data[CONF_USE_SSO] = True
+                await validate_input(self.hass, user_input)
                 return self.async_create_entry(
-                    title=user_input[CONF_USERNAME], data=entry_data
+                    title=user_input[CONF_USERNAME], data=user_input
                 )
             except CannotConnect:
                 errors["base"] = "cannot_connect"

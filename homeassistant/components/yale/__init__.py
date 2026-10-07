@@ -16,10 +16,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryNotReady,
-    OAuth2TokenRequestBaseError,
+    OAuth2TokenRequestError,
+    OAuth2TokenRequestReauthError,
 )
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.config_entry_oauth2_flow import (
+    ImplementationUnavailableError,
     OAuth2Session,
     async_get_config_entry_implementation,
 )
@@ -35,19 +37,23 @@ type YaleConfigEntry = ConfigEntry[YaleData]
 async def async_setup_entry(hass: HomeAssistant, entry: YaleConfigEntry) -> bool:
     """Set up Yale from a config entry."""
     session = async_create_yale_clientsession(hass)
-    implementation = await async_get_config_entry_implementation(hass, entry)
+    try:
+        implementation = await async_get_config_entry_implementation(hass, entry)
+    except ImplementationUnavailableError as err:
+        raise ConfigEntryNotReady("OAuth implementation not available") from err
     oauth_session = OAuth2Session(hass, entry, implementation)
     yale_gateway = YaleGateway(Path(hass.config.config_dir), session, oauth_session)
     try:
         await async_setup_yale(hass, entry, yale_gateway)
-    except OAuth2TokenRequestBaseError:
-        raise
+    except OAuth2TokenRequestReauthError as err:
+        raise ConfigEntryAuthFailed from err
     except (RequireValidation, InvalidAuth) as err:
         raise ConfigEntryAuthFailed from err
     except TimeoutError as err:
         raise ConfigEntryNotReady("Timed out connecting to yale api") from err
     except (
         YaleApiError,
+        OAuth2TokenRequestError,
         ClientError,
         CannotConnect,
     ) as err:

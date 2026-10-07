@@ -36,14 +36,14 @@
     'subentries': dict({
       'home-subentry-id': dict({
         'daily_forecast_data': dict({
-          'forecastDays': list([
+          'forecast_days': list([
             dict({
-              'daytimeForecast': dict({
-                'cloudCover': 53,
-                'iceThickness': None,
+              'daytime_forecast': dict({
+                'cloud_cover': 53,
+                'ice_thickness': None,
                 'interval': dict({
-                  'endTime': '2025-02-11T03:00:00Z',
-                  'startTime': '2025-02-10T15:00:00Z',
+                  'end_time': '2025-02-11T03:00:00Z',
+                  'start_time': '2025-02-10T15:00:00Z',
                 }),
                 'precipitation': dict({
                   'probability': dict({
@@ -54,17 +54,17 @@
                     'quantity': 0.0,
                     'unit': 'MILLIMETERS',
                   }),
-                  'snowQpf': None,
+                  'snow_qpf': None,
                 }),
-                'relativeHumidity': 54,
-                'thunderstormProbability': 0,
-                'uvIndex': 3,
-                'weatherCondition': dict({
+                'relative_humidity': 54,
+                'thunderstorm_probability': 0,
+                'uv_index': 3,
+                'weather_condition': dict({
                   'description': dict({
-                    'languageCode': 'en',
+                    'language_code': 'en',
                     'text': 'Partly sunny',
                   }),
-                  'iconBaseUri': 'https://maps.gstatic.com/weather/v1/party_cloudy',
+                  'icon_base_uri': 'https://maps.gstatic.com/weather/v1/party_cloudy',
                   'type': 'PARTLY_CLOUDY',
                 }),
                 'wind': dict({
@@ -82,54 +82,54 @@
                   }),
                 }),
               }),
-              'displayDate': dict({
+              'display_date': dict({
                 'day': 10,
                 'month': 2,
                 'year': 2025,
               }),
-              'feelsLikeMaxTemperature': dict({
+              'feels_like_max_temperature': dict({
                 'degrees': 13.3,
                 'unit': 'CELSIUS',
               }),
-              'feelsLikeMinTemperature': dict({
+              'feels_like_min_temperature': dict({
                 'degrees': 1.5,
                 'unit': 'CELSIUS',
               }),
-              'iceThickness': dict({
+              'ice_thickness': dict({
                 'thickness': 0.0,
                 'unit': 'MILLIMETERS',
               }),
               'interval': dict({
-                'endTime': '2025-02-11T15:00:00Z',
-                'startTime': '2025-02-10T15:00:00Z',
+                'end_time': '2025-02-11T15:00:00Z',
+                'start_time': '2025-02-10T15:00:00Z',
               }),
-              'maxHeatIndex': dict({
+              'max_heat_index': dict({
                 'degrees': 13.3,
                 'unit': 'CELSIUS',
               }),
-              'maxTemperature': dict({
+              'max_temperature': dict({
                 'degrees': 13.3,
                 'unit': 'CELSIUS',
               }),
-              'minTemperature': dict({
+              'min_temperature': dict({
                 'degrees': 1.5,
                 'unit': 'CELSIUS',
               }),
-              'moonEvents': dict({
-                'moonPhase': 'WAXING_GIBBOUS',
-                'moonriseTimes': list([
+              'moon_events': dict({
+                'moon_phase': 'WAXING_GIBBOUS',
+                'moonrise_times': list([
                   '2025-02-10T23:54:17.713157984Z',
                 ]),
-                'moonsetTimes': list([
+                'moonset_times': list([
                   '2025-02-10T14:13:58.625181191Z',
                 ]),
               }),
-              'nighttimeForecast': dict({
-                'cloudCover': 70,
-                'iceThickness': None,
+              'nighttime_forecast': dict({
+                'cloud_cover': 70,
+                'ice_thickness': None,
                 'interval': dict({
-                  'endTime': '2025-02-11T15:00:00Z',
-                  'startTime': '2025-02-11T03:00:00Z',
+                  'end_time': '2025-02-11T15:00:00Z',
+                  'start_time': '2025-02-11T03:00:00Z',
                 }),
                 'precipitation': dict({
                   'probability': dict({
@@ -140,17 +140,17 @@
                     'quantity': 0.0,
                     'unit': 'MILLIMETERS',
                   }),
-                  'snowQpf': None,
+                  'snow_qpf': None,
                 }),
-                'relativeHumidity': 85,
-                'thunderstormProbability': 0,
-                'uvIndex': 0,
-                'weatherCondition': dict({
+                'relative_humidity': 85,
+                'thunderstorm_probability': 0,
+                'uv_index': 0,
+                'weather_condition': dict({
                   'description': dict({
-                    'languageCode': 'en',
+                    'language_code': 'en',
                     'text': 'Partly cloudy',
                   }),
-                  'iconBaseUri': 'https://maps.gstatic.com/weather/v1/partly_clear',
+                  'icon_base_uri': 'https://maps.gstatic.com/weather/v1/partly_clear',
                   'type': 'PARTLY_CLOUDY',
                 }),
                 'wind': dict({
@@ -168,57 +168,57 @@
                   }),
                 }),
               }),
-              'sunEvents': dict({
-                'sunriseTime': '2025-02-10T15:02:35.703929582Z',
-                'sunsetTime': '2025-02-11T01:43:00.762932858Z',
+              'sun_events': dict({
+                'sunrise_time': '2025-02-10T15:02:35.703929582Z',
+                'sunset_time': '2025-02-11T01:43:00.762932858Z',
               }),
             }),
           ]),
-          'nextPageToken': None,
-          'timeZone': dict({
+          'next_page_token': None,
+          'time_zone': dict({
             'id': 'America/Los_Angeles',
             'version': None,
           }),
         }),
         'hourly_forecast_data': dict({
-          'forecastHours': list([
+          'forecast_hours': list([
             dict({
-              'airPressure': dict({
-                'meanSeaLevelMillibars': 1019.13,
+              'air_pressure': dict({
+                'mean_sea_level_millibars': 1019.13,
               }),
-              'cloudCover': 0,
-              'dewPoint': dict({
+              'cloud_cover': 0,
+              'dew_point': dict({
                 'degrees': 2.7,
                 'unit': 'CELSIUS',
               }),
-              'displayDateTime': dict({
+              'display_date_time': dict({
                 'day': 5,
                 'hours': 15,
                 'minutes': None,
                 'month': 2,
                 'nanos': None,
                 'seconds': None,
-                'timeZone': None,
-                'utcOffset': '-28800s',
+                'time_zone': None,
+                'utc_offset': '-28800s',
                 'year': 2025,
               }),
-              'feelsLikeTemperature': dict({
+              'feels_like_temperature': dict({
                 'degrees': 12.0,
                 'unit': 'CELSIUS',
               }),
-              'heatIndex': dict({
+              'heat_index': dict({
                 'degrees': 12.7,
                 'unit': 'CELSIUS',
               }),
-              'iceThickness': dict({
+              'ice_thickness': dict({
                 'thickness': 0.0,
                 'unit': 'MILLIMETERS',
               }),
               'interval': dict({
-                'endTime': '2025-02-06T00:00:00Z',
-                'startTime': '2025-02-05T23:00:00Z',
+                'end_time': '2025-02-06T00:00:00Z',
+                'start_time': '2025-02-05T23:00:00Z',
               }),
-              'isDaytime': True,
+              'is_daytime': True,
               'precipitation': dict({
                 'probability': dict({
                   'percent': 0,
@@ -228,28 +228,28 @@
                   'quantity': 0.0,
                   'unit': 'MILLIMETERS',
                 }),
-                'snowQpf': None,
+                'snow_qpf': None,
               }),
-              'relativeHumidity': 51,
+              'relative_humidity': 51,
               'temperature': dict({
                 'degrees': 12.7,
                 'unit': 'CELSIUS',
               }),
-              'thunderstormProbability': 0,
-              'uvIndex': 1,
+              'thunderstorm_probability': 0,
+              'uv_index': 1,
               'visibility': dict({
                 'distance': 16.0,
                 'unit': 'KILOMETERS',
               }),
-              'weatherCondition': dict({
+              'weather_condition': dict({
                 'description': dict({
-                  'languageCode': 'en',
+                  'language_code': 'en',
                   'text': 'Sunny',
                 }),
-                'iconBaseUri': 'https://maps.gstatic.com/weather/v1/sunny',
+                'icon_base_uri': 'https://maps.gstatic.com/weather/v1/sunny',
                 'type': 'CLEAR',
               }),
-              'wetBulbTemperature': dict({
+              'wet_bulb_temperature': dict({
                 'degrees': 7.7,
                 'unit': 'CELSIUS',
               }),
@@ -267,29 +267,29 @@
                   'value': 10.0,
                 }),
               }),
-              'windChill': dict({
+              'wind_chill': dict({
                 'degrees': 12.0,
                 'unit': 'CELSIUS',
               }),
             }),
           ]),
-          'nextPageToken': None,
-          'timeZone': dict({
+          'next_page_token': None,
+          'time_zone': dict({
             'id': 'America/Los_Angeles',
             'version': None,
           }),
         }),
         'observation_data': dict({
-          'airPressure': dict({
-            'meanSeaLevelMillibars': 1019.16,
+          'air_pressure': dict({
+            'mean_sea_level_millibars': 1019.16,
           }),
-          'cloudCover': 0,
-          'currentConditionsHistory': dict({
-            'maxTemperature': dict({
+          'cloud_cover': 0,
+          'current_conditions_history': dict({
+            'max_temperature': dict({
               'degrees': 14.3,
               'unit': 'CELSIUS',
             }),
-            'minTemperature': dict({
+            'min_temperature': dict({
               'degrees': 3.7,
               'unit': 'CELSIUS',
             }),
@@ -297,25 +297,25 @@
               'quantity': 0.0,
               'unit': 'MILLIMETERS',
             }),
-            'temperatureChange': dict({
+            'temperature_change': dict({
               'degrees': -0.6,
               'unit': 'CELSIUS',
             }),
           }),
-          'currentTime': '2025-01-28T22:04:12.025273178Z',
-          'dewPoint': dict({
+          'current_time': '2025-01-28T22:04:12.025273178Z',
+          'dew_point': dict({
             'degrees': 1.1,
             'unit': 'CELSIUS',
           }),
-          'feelsLikeTemperature': dict({
+          'feels_like_temperature': dict({
             'degrees': 13.1,
             'unit': 'CELSIUS',
           }),
-          'heatIndex': dict({
+          'heat_index': dict({
             'degrees': 13.7,
             'unit': 'CELSIUS',
           }),
-          'isDaytime': True,
+          'is_daytime': True,
           'precipitation': dict({
             'probability': dict({
               'percent': 0,
@@ -325,29 +325,29 @@
               'quantity': 0.0,
               'unit': 'MILLIMETERS',
             }),
-            'snowQpf': None,
+            'snow_qpf': None,
           }),
-          'relativeHumidity': 42,
+          'relative_humidity': 42,
           'temperature': dict({
             'degrees': 13.7,
             'unit': 'CELSIUS',
           }),
-          'thunderstormProbability': 0,
-          'timeZone': dict({
+          'thunderstorm_probability': 0,
+          'time_zone': dict({
             'id': 'America/Los_Angeles',
             'version': None,
           }),
-          'uvIndex': 1,
+          'uv_index': 1,
           'visibility': dict({
             'distance': 16.0,
             'unit': 'KILOMETERS',
           }),
-          'weatherCondition': dict({
+          'weather_condition': dict({
             'description': dict({
-              'languageCode': 'en',
+              'language_code': 'en',
               'text': 'Sunny',
             }),
-            'iconBaseUri': 'https://maps.gstatic.com/weather/v1/sunny',
+            'icon_base_uri': 'https://maps.gstatic.com/weather/v1/sunny',
             'type': 'CLEAR',
           }),
           'wind': dict({
@@ -364,7 +364,7 @@
               'value': 8.0,
             }),
           }),
-          'windChill': dict({
+          'wind_chill': dict({
             'degrees': 13.1,
             'unit': 'CELSIUS',
           }),

@@ -16,6 +16,7 @@ from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_NAME,
     CONF_SCAN_INTERVAL,
+    CONF_SLAVE,
     CONF_STRUCTURE,
     CONF_UNIQUE_ID,
     STATE_OFF,
@@ -39,6 +40,7 @@ from .const import (
     CALL_TYPE_X_COILS,
     CALL_TYPE_X_REGISTER_HOLDINGS,
     CONF_DATA_TYPE,
+    CONF_DEVICE_ADDRESS,
     CONF_INPUT_TYPE,
     CONF_MAX_VALUE,
     CONF_MIN_VALUE,
@@ -61,7 +63,7 @@ from .const import (
     SIGNAL_STOP_ENTITY,
     DataType,
 )
-from .modbus import ModbusHub, entity_unit_id
+from .modbus import ModbusHub
 
 
 class ModbusBaseEntity(Entity):
@@ -78,7 +80,10 @@ class ModbusBaseEntity(Entity):
         """Initialize the Modbus binary sensor."""
 
         self._hub = hub
-        self._device_address = entity_unit_id(entry)
+        if (conf_slave := entry.get(CONF_SLAVE)) is not None:
+            self._device_address = conf_slave
+        else:
+            self._device_address = entry.get(CONF_DEVICE_ADDRESS, 1)
         self._address = int(entry[CONF_ADDRESS])
         self._input_type = entry[CONF_INPUT_TYPE]
         self._scan_interval = int(entry[CONF_SCAN_INTERVAL])
@@ -144,11 +149,7 @@ class ModbusBaseEntity(Entity):
             )
         )
         self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                SIGNAL_STOP_ENTITY.format(self._hub.name),
-                self.async_disable,
-            )
+            async_dispatcher_connect(self.hass, SIGNAL_STOP_ENTITY, self.async_disable)
         )
 
 

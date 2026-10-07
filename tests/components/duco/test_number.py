@@ -1,8 +1,7 @@
 """Tests for the Duco number platform."""
 
-import asyncio
 from dataclasses import replace
-from unittest.mock import AsyncMock, call
+from unittest.mock import AsyncMock
 
 from duco_connectivity import (
     BypassSupplyTemperatureTarget,
@@ -13,6 +12,7 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.duco.const import SCAN_INTERVAL
 from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN, SERVICE_SET_VALUE
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
@@ -20,9 +20,9 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
-from . import async_fire_coordinator_update, setup_platform_integration
+from . import setup_platform_integration
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 _ZONE_1_ENTITY_ID = "number.living_bypass_target_1"
 _ZONE_2_ENTITY_ID = "number.living_bypass_target_2"
@@ -66,61 +66,6 @@ async def test_bypass_supply_temperature_target_numbers_support_all_exposed_zone
     mock_duco_client.async_get_bypass_supply_temperature_targets.assert_awaited_once_with()
 
 
-async def test_successful_write_does_not_recover_failed_coordinator(
-    hass: HomeAssistant,
-    mock_bypass_supply_temperature_targets: dict[int, BypassSupplyTemperatureTarget],
-    mock_config_entry: MockConfigEntry,
-    mock_duco_client: AsyncMock,
-) -> None:
-    """Test a successful write does not recover a failed coordinator."""
-    await setup_platform_integration(hass, mock_config_entry, [Platform.NUMBER])
-    write_started = asyncio.Event()
-    release_write = asyncio.Event()
-    target = mock_bypass_supply_temperature_targets[1]
-
-    async def set_bypass_supply_temperature_target(
-        zone_id: int,
-        temperature: float,
-        *,
-        target: BypassSupplyTemperatureTarget,
-    ) -> BypassSupplyTemperatureTarget:
-        updated_target = replace(target, zone_id=zone_id, value=temperature)
-        mock_bypass_supply_temperature_targets[zone_id] = updated_target
-        write_started.set()
-        await release_write.wait()
-        return updated_target
-
-    mock_duco_client.async_set_bypass_supply_temperature_target.side_effect = (
-        set_bypass_supply_temperature_target
-    )
-    write_task = asyncio.create_task(
-        hass.services.async_call(
-            NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: _ZONE_1_ENTITY_ID, "value": 20.5},
-            blocking=True,
-        )
-    )
-    await write_started.wait()
-
-    mock_duco_client.async_get_nodes.side_effect = DucoError("Temporary update failure")
-    await mock_config_entry.runtime_data.async_refresh()
-
-    state = hass.states.get(_ZONE_1_ENTITY_ID)
-    assert state is not None
-    assert state.state == STATE_UNAVAILABLE
-
-    release_write.set()
-    await write_task
-
-    mock_duco_client.async_set_bypass_supply_temperature_target.assert_awaited_once_with(
-        1, 20.5, target=target
-    )
-    state = hass.states.get(_ZONE_1_ENTITY_ID)
-    assert state is not None
-    assert state.state == STATE_UNAVAILABLE
-
-
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
 async def test_bypass_supply_temperature_target_number_entities_state(
     hass: HomeAssistant,
@@ -153,30 +98,22 @@ async def test_set_bypass_supply_temperature_target(
     mock_bypass_supply_temperature_targets: dict[int, BypassSupplyTemperatureTarget],
     mock_duco_client: AsyncMock,
 ) -> None:
-    """Test consecutive bypass target writes update directly from their responses."""
+    """Test setting a bypass target refreshes the number from the box."""
     target = mock_bypass_supply_temperature_targets[1]
 
-    for value in (20.5, 21.0):
-        await hass.services.async_call(
-            NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: _ZONE_1_ENTITY_ID, "value": value},
-            blocking=True,
-        )
-
-        state = hass.states.get(_ZONE_1_ENTITY_ID)
-        assert state is not None
-        assert state.state == str(value)
-
-    assert (
-        mock_duco_client.async_set_bypass_supply_temperature_target.await_args_list
-        == [
-            call(1, 20.5, target=target),
-            call(1, 21.0, target=replace(target, value=20.5)),
-        ]
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        SERVICE_SET_VALUE,
+        {ATTR_ENTITY_ID: _ZONE_1_ENTITY_ID, "value": 20.5},
+        blocking=True,
     )
-    mock_duco_client.async_get_bypass_supply_temperature_targets.assert_awaited_once_with()
-    assert mock_bypass_supply_temperature_targets[1] == replace(target, value=21.0)
+
+    mock_duco_client.async_set_bypass_supply_temperature_target.assert_awaited_once_with(
+        1, 20.5, target=target
+    )
+    state = hass.states.get(_ZONE_1_ENTITY_ID)
+    assert state is not None
+    assert state.state == "20.5"
 
 
 async def test_set_bypass_supply_temperature_target_honors_increment_metadata(
@@ -297,14 +234,18 @@ async def test_bypass_supply_temperature_target_becomes_unavailable_when_missing
     assert state.state == "20.0"
 
     updated_target = replace(mock_bypass_supply_temperature_targets.pop(1), value=20.5)
-    await async_fire_coordinator_update(hass, freezer)
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get(_ZONE_1_ENTITY_ID)
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
 
     mock_bypass_supply_temperature_targets[1] = updated_target
-    await async_fire_coordinator_update(hass, freezer)
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get(_ZONE_1_ENTITY_ID)
     assert state is not None
@@ -329,13 +270,17 @@ async def test_bypass_supply_temperature_target_recovers_from_refresh_error(
         DucoError("Temporary bypass target failure"),
         mock_bypass_supply_temperature_targets.copy(),
     ]
-    await async_fire_coordinator_update(hass, freezer)
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get(_ZONE_1_ENTITY_ID)
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
 
-    await async_fire_coordinator_update(hass, freezer)
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get(_ZONE_1_ENTITY_ID)
     assert state is not None

@@ -9,7 +9,7 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
     OptionsFlowWithReload,
 )
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, callback
+from homeassistant.core import callback
 
 from .const import (
     CONF_SERVER_ID,
@@ -41,10 +41,7 @@ class SpeedTestFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         if self._async_current_entries():
-            return self.async_abort(
-                reason="single_instance_allowed",
-                translation_domain=HOMEASSISTANT_DOMAIN,
-            )
+            return self.async_abort(reason="single_instance_allowed")
 
         if user_input is None:
             return self.async_show_form(step_id="user")

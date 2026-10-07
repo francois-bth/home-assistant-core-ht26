@@ -1,7 +1,6 @@
 """Test the Advantage Air Climate Platform."""
 
-from collections.abc import Generator
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
 from advantage_air import ApiError
 import pytest
@@ -9,8 +8,11 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.advantage_air.climate import ADVANTAGE_AIR_MYAUTO
 from homeassistant.components.climate import (
+    ATTR_CURRENT_TEMPERATURE,
     ATTR_FAN_MODE,
     ATTR_HVAC_MODE,
+    ATTR_MAX_TEMP,
+    ATTR_MIN_TEMP,
     ATTR_PRESET_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
@@ -25,84 +27,171 @@ from homeassistant.components.climate import (
     SERVICE_TURN_ON,
     HVACMode,
 )
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, Platform
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from . import add_mock_config
 
-from tests.common import snapshot_platform
 
-
-@pytest.fixture(autouse=True)
-def override_platforms() -> Generator[None]:
-    """Override PLATFORMS."""
-    with patch("homeassistant.components.advantage_air.PLATFORMS", [Platform.CLIMATE]):
-        yield
-
-
-@pytest.mark.usefixtures("mock_get")
-async def test_all_entities(
+async def test_climate_myzone_main(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
+    mock_get: AsyncMock,
+    mock_update: AsyncMock,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test all entities."""
-
-    config_entry = await add_mock_config(hass)
-
-    await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
-
-
-@pytest.mark.usefixtures("mock_get")
-@pytest.mark.parametrize(
-    ("entity_id", "hvac_mode"),
-    [
-        pytest.param("climate.myzone", HVACMode.COOL, id="main-cool"),
-        pytest.param("climate.myzone", HVACMode.FAN_ONLY, id="main-fan_only"),
-        pytest.param("climate.myzone", HVACMode.OFF, id="main-off"),
-        pytest.param(
-            "climate.myzone_zone_open_with_sensor",
-            HVACMode.HEAT_COOL,
-            id="zone-heat_cool",
-        ),
-        pytest.param(
-            "climate.myzone_zone_open_with_sensor", HVACMode.OFF, id="zone-off"
-        ),
-    ],
-)
-async def test_set_hvac_mode(
-    hass: HomeAssistant,
-    mock_update: AsyncMock,
-    entity_id: str,
-    hvac_mode: HVACMode,
-) -> None:
-    """Test setting the HVAC mode."""
+    """Test climate platform main entity."""
 
     await add_mock_config(hass)
+
+    # Test MyZone main climate entity
+    entity_id = "climate.myzone"
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == HVACMode.FAN_ONLY
+    assert state.attributes.get(ATTR_MIN_TEMP) == 16
+    assert state.attributes.get(ATTR_MAX_TEMP) == 32
+    assert state.attributes.get(ATTR_TEMPERATURE) == 24
+    assert state.attributes.get(ATTR_CURRENT_TEMPERATURE) == 25
+
+    entry = entity_registry.async_get(entity_id)
+    assert entry
+    assert entry.unique_id == "uniqueid-ac1"
+
+    # Test setting HVAC Mode
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: [entity_id], ATTR_HVAC_MODE: hvac_mode},
+        {ATTR_ENTITY_ID: [entity_id], ATTR_HVAC_MODE: HVACMode.COOL},
         blocking=True,
     )
     mock_update.assert_called_once()
+    mock_update.reset_mock()
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {ATTR_ENTITY_ID: [entity_id], ATTR_HVAC_MODE: HVACMode.FAN_ONLY},
+        blocking=True,
+    )
+    mock_update.assert_called_once()
+    mock_update.reset_mock()
+
+    # Test Turning Off with HVAC Mode
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {ATTR_ENTITY_ID: [entity_id], ATTR_HVAC_MODE: HVACMode.OFF},
+        blocking=True,
+    )
+    mock_update.assert_called_once()
+    mock_update.reset_mock()
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_FAN_MODE,
+        {ATTR_ENTITY_ID: [entity_id], ATTR_FAN_MODE: FAN_LOW},
+        blocking=True,
+    )
+    mock_update.assert_called_once()
+    mock_update.reset_mock()
+
+    # Test changing Temperature
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_ENTITY_ID: [entity_id], ATTR_TEMPERATURE: 25},
+        blocking=True,
+    )
+    mock_update.assert_called_once()
+    mock_update.reset_mock()
+
+    # Test Turning On
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: [entity_id]},
+        blocking=True,
+    )
+    mock_update.assert_called_once()
+    mock_update.reset_mock()
+
+    # Test Turning Off
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: [entity_id]},
+        blocking=True,
+    )
+    mock_update.assert_called_once()
+    mock_update.reset_mock()
+
+    # Change Preset
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_PRESET_MODE,
+        {ATTR_ENTITY_ID: [entity_id], ATTR_PRESET_MODE: ADVANTAGE_AIR_MYAUTO},
+        blocking=True,
+    )
+    mock_update.assert_called_once()
+    assert mock_update.call_args[0][0] == snapshot(name=f"{entity_id}-preset")
+    mock_update.reset_mock()
+
+    # Test setting HEAT COOL when its not supported
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_HVAC_MODE,
+            {ATTR_ENTITY_ID: [entity_id], ATTR_HVAC_MODE: HVACMode.HEAT_COOL},
+            blocking=True,
+        )
 
 
-@pytest.mark.usefixtures("mock_get")
-@pytest.mark.parametrize(
-    "entity_id", ["climate.myzone", "climate.myzone_zone_open_with_sensor"]
-)
-async def test_set_temperature(
+async def test_climate_myzone_zone(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_get: AsyncMock,
     mock_update: AsyncMock,
-    entity_id: str,
 ) -> None:
-    """Test setting the target temperature."""
+    """Test climate platform myzone zone entity."""
 
     await add_mock_config(hass)
+
+    # Test Climate Zone Entity
+    entity_id = "climate.myzone_zone_open_with_sensor"
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes.get(ATTR_MIN_TEMP) == 16
+    assert state.attributes.get(ATTR_MAX_TEMP) == 32
+    assert state.attributes.get(ATTR_TEMPERATURE) == 24
+    assert state.attributes.get(ATTR_CURRENT_TEMPERATURE) == 25
+
+    entry = entity_registry.async_get(entity_id)
+    assert entry
+    assert entry.unique_id == "uniqueid-ac1-z01"
+
+    # Test Climate Zone On
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {ATTR_ENTITY_ID: [entity_id], ATTR_HVAC_MODE: HVACMode.HEAT_COOL},
+        blocking=True,
+    )
+    mock_update.assert_called_once()
+    mock_update.reset_mock()
+
+    # Test Climate Zone Off
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {ATTR_ENTITY_ID: [entity_id], ATTR_HVAC_MODE: HVACMode.OFF},
+        blocking=True,
+    )
+    mock_update.assert_called_once()
+    mock_update.reset_mock()
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
@@ -111,121 +200,56 @@ async def test_set_temperature(
         blocking=True,
     )
     mock_update.assert_called_once()
+    mock_update.reset_mock()
 
 
-@pytest.mark.usefixtures("mock_get")
-@pytest.mark.parametrize("service", [SERVICE_TURN_ON, SERVICE_TURN_OFF])
-async def test_turn_on_off(
+async def test_climate_myauto_main(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_get: AsyncMock,
     mock_update: AsyncMock,
-    service: str,
+    snapshot: SnapshotAssertion,
 ) -> None:
-    """Test turning the main entity on and off."""
+    """Test climate platform zone entity."""
 
     await add_mock_config(hass)
 
-    await hass.services.async_call(
-        CLIMATE_DOMAIN,
-        service,
-        {ATTR_ENTITY_ID: ["climate.myzone"]},
-        blocking=True,
-    )
-    mock_update.assert_called_once()
+    # Test MyAuto Climate Entity
+    entity_id = "climate.myauto"
+    assert hass.states.get(entity_id) == snapshot(name=entity_id)
 
-
-@pytest.mark.usefixtures("mock_get")
-async def test_set_fan_mode(hass: HomeAssistant, mock_update: AsyncMock) -> None:
-    """Test setting the fan mode."""
-
-    await add_mock_config(hass)
-
-    await hass.services.async_call(
-        CLIMATE_DOMAIN,
-        SERVICE_SET_FAN_MODE,
-        {ATTR_ENTITY_ID: ["climate.myzone"], ATTR_FAN_MODE: FAN_LOW},
-        blocking=True,
-    )
-    mock_update.assert_called_once()
-
-
-@pytest.mark.usefixtures("mock_get")
-async def test_set_preset_mode(
-    hass: HomeAssistant, mock_update: AsyncMock, snapshot: SnapshotAssertion
-) -> None:
-    """Test setting the preset mode."""
-
-    await add_mock_config(hass)
-
-    await hass.services.async_call(
-        CLIMATE_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
-        {ATTR_ENTITY_ID: ["climate.myzone"], ATTR_PRESET_MODE: ADVANTAGE_AIR_MYAUTO},
-        blocking=True,
-    )
-    mock_update.assert_called_once()
-    assert mock_update.call_args[0][0] == snapshot
-
-
-@pytest.mark.usefixtures("mock_get")
-async def test_set_hvac_mode_unsupported(
-    hass: HomeAssistant, mock_update: AsyncMock
-) -> None:
-    """Test setting an HVAC mode the main entity does not support."""
-
-    await add_mock_config(hass)
-
-    with pytest.raises(ServiceValidationError):
-        await hass.services.async_call(
-            CLIMATE_DOMAIN,
-            SERVICE_SET_HVAC_MODE,
-            {ATTR_ENTITY_ID: ["climate.myzone"], ATTR_HVAC_MODE: HVACMode.HEAT_COOL},
-            blocking=True,
-        )
-
-
-@pytest.mark.usefixtures("mock_get")
-async def test_myauto_set_temperature_range(
-    hass: HomeAssistant, mock_update: AsyncMock, snapshot: SnapshotAssertion
-) -> None:
-    """Test setting the target temperature range on a MyAuto entity."""
-
-    await add_mock_config(hass)
+    entry = entity_registry.async_get(entity_id)
+    assert entry
+    assert entry.unique_id == "uniqueid-ac3"
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_TEMPERATURE,
         {
-            ATTR_ENTITY_ID: ["climate.myauto"],
+            ATTR_ENTITY_ID: [entity_id],
             ATTR_TARGET_TEMP_LOW: 21,
             ATTR_TARGET_TEMP_HIGH: 23,
         },
         blocking=True,
     )
     mock_update.assert_called_once()
-    assert mock_update.call_args[0][0] == snapshot
+    assert mock_update.call_args[0][0] == snapshot(name=f"{entity_id}-settemp")
+    mock_update.reset_mock()
 
-
-@pytest.mark.usefixtures("mock_get")
-async def test_myauto_set_fan_mode(
-    hass: HomeAssistant, mock_update: AsyncMock, snapshot: SnapshotAssertion
-) -> None:
-    """Test setting the fan mode on a MyAuto entity."""
-
-    await add_mock_config(hass)
-
+    # Test AutoFanMode
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_FAN_MODE,
-        {ATTR_ENTITY_ID: ["climate.myauto"], ATTR_FAN_MODE: FAN_AUTO},
+        {ATTR_ENTITY_ID: [entity_id], ATTR_FAN_MODE: FAN_AUTO},
         blocking=True,
     )
     mock_update.assert_called_once()
-    assert mock_update.call_args[0][0] == snapshot
+    assert mock_update.call_args[0][0] == snapshot(name=f"{entity_id}-fanmode")
 
 
-@pytest.mark.usefixtures("mock_get")
 async def test_climate_async_failed_update(
     hass: HomeAssistant,
+    mock_get: AsyncMock,
     mock_update: AsyncMock,
 ) -> None:
     """Test climate change failure."""

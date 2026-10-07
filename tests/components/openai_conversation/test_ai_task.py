@@ -10,10 +10,7 @@ import voluptuous as vol
 
 from homeassistant.components import ai_task, media_source
 from homeassistant.components.openai_conversation import DOMAIN
-from homeassistant.components.openai_conversation.const import (
-    CONF_IMAGE_MODEL,
-    CONF_STORE_RESPONSES,
-)
+from homeassistant.components.openai_conversation.const import CONF_STORE_RESPONSES
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er, issue_registry as ir, selector
@@ -69,10 +66,6 @@ async def test_generate_data(
     assert result.data == "The test data"
     assert mock_create_stream.call_args is not None
     assert mock_create_stream.call_args.kwargs["store"] is expected_store
-    assert (
-        mock_create_stream.call_args.kwargs["prompt_cache_key"]
-        == ai_task_entry.subentry_id
-    )
 
 
 @pytest.mark.usefixtures("mock_init_component")
@@ -232,31 +225,12 @@ async def test_generate_data_with_attachments(
 @pytest.mark.freeze_time("2025-06-14 22:59:00")
 @pytest.mark.parametrize("configured_store", [False, True])
 @pytest.mark.parametrize(
-    ("image_options", "image_model", "input_fidelity_options"),
+    ("image_model", "input_fidelity_present"),
     [
-        ({}, "gpt-image-2.5-flare", {}),
-        (
-            {CONF_IMAGE_MODEL: "gpt-image-2.5-sunburst"},
-            "gpt-image-2.5-sunburst",
-            {},
-        ),
-        (
-            {CONF_IMAGE_MODEL: "gpt-image-2.5-flare"},
-            "gpt-image-2.5-flare",
-            {},
-        ),
-        ({CONF_IMAGE_MODEL: "gpt-image-2"}, "gpt-image-2", {}),
-        (
-            {CONF_IMAGE_MODEL: "gpt-image-1.5"},
-            "gpt-image-1.5",
-            {"input_fidelity": "high"},
-        ),
-        (
-            {CONF_IMAGE_MODEL: "gpt-image-1"},
-            "gpt-image-1",
-            {"input_fidelity": "high"},
-        ),
-        ({CONF_IMAGE_MODEL: "gpt-image-1-mini"}, "gpt-image-1-mini", {}),
+        ("gpt-image-2", False),
+        ("gpt-image-1.5", True),
+        ("gpt-image-1", True),
+        ("gpt-image-1-mini", False),
     ],
 )
 async def test_generate_image(
@@ -265,9 +239,8 @@ async def test_generate_image(
     mock_create_stream: AsyncMock,
     entity_registry: er.EntityRegistry,
     issue_registry: ir.IssueRegistry,
-    image_options: dict[str, str],
     image_model: str,
-    input_fidelity_options: dict[str, str],
+    input_fidelity_present: bool,
     configured_store: bool,
 ) -> None:
     """Test AI Task image generation."""
@@ -287,7 +260,7 @@ async def test_generate_image(
         ai_task_entry,
         data={
             **ai_task_entry.data,
-            **image_options,
+            "image_model": image_model,
             CONF_STORE_RESPONSES: configured_store,
         },
     )
@@ -337,12 +310,7 @@ async def test_generate_image(
             if tool["type"] == "image_generation"
         ),
     )
-    assert image_tool == {
-        "type": "image_generation",
-        "model": image_model,
-        "output_format": "png",
-        **input_fidelity_options,
-    }
+    assert ("input_fidelity" in image_tool) == input_fidelity_present
     image_data = mock_upload_media.call_args[0][1]
     assert image_data.file.getvalue() == b"A"
     assert image_data.content_type == "image/png"

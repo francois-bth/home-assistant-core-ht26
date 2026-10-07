@@ -1,13 +1,12 @@
 """Base entity for entities in victron_gx integration."""
 
 from abc import abstractmethod
-from typing import override
+from typing import Any, override
 
 from victron_mqtt import (
     Device as VictronVenusDevice,
     Metric as VictronVenusMetric,
     MetricType,
-    MetricValue,
 )
 
 from homeassistant.const import EntityCategory
@@ -52,7 +51,6 @@ class VictronBaseEntity(Entity):
 
     _attr_should_poll = False
     _attr_has_entity_name = True
-    _follow_metric_availability = True
 
     def __init__(
         self,
@@ -64,8 +62,6 @@ class VictronBaseEntity(Entity):
         """Initialize the entity."""
         self._device = device
         self._metric = metric
-        if self._follow_metric_availability:
-            self._attr_available = metric.available
         self._attr_device_info = device_info
         self._attr_unique_id = f"{installation_id}_{metric.unique_id}"
         self._attr_suggested_display_precision = metric.precision
@@ -115,17 +111,11 @@ class VictronBaseEntity(Entity):
 
     @callback
     @abstractmethod
-    def _on_update_cb(self, value: MetricValue) -> None:
+    def _on_update_cb(self, value: Any) -> None:
         """Handle the metric update. Must be implemented by subclasses."""
 
     @callback
-    def _on_update(self, metric: VictronVenusMetric, value: MetricValue) -> None:
-        if self._follow_metric_availability and not metric.available:
-            if self._attr_available:
-                self._attr_available = False
-                self.async_write_ha_state()
-            return
-        self._attr_available = True
+    def _on_update(self, _: VictronVenusMetric, value: Any) -> None:
         self._on_update_cb(value)
 
     @override

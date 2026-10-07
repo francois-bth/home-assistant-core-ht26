@@ -8,7 +8,7 @@ from urllib import parse
 from httpx import AsyncClient, HTTPError, HTTPStatusError
 import voluptuous as vol
 
-from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse, callback
+from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, service
 from homeassistant.helpers.httpx_client import get_async_client
@@ -53,8 +53,7 @@ _IMAGE_ANGLE_MAP = {
 }
 
 
-@callback
-def async_setup_services(hass: HomeAssistant) -> None:
+async def async_setup_services(hass: HomeAssistant) -> None:
     """Set up services."""
 
     hass.services.async_register(

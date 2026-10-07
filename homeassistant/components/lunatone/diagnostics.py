@@ -11,13 +11,10 @@ async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, entry: LunatoneConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    info_data = entry.runtime_data.coordinator_info.data
-    devices_data = entry.runtime_data.coordinator_devices.data
     return {
-        "info": info_data.model_dump(),
+        "info": entry.runtime_data.coordinator_info.data.model_dump(),
         "devices": [
-            device.data.model_dump()
-            for devices in devices_data.values()
-            for device in devices.values()
+            v.data.model_dump()
+            for v in entry.runtime_data.coordinator_devices.data.values()
         ],
     }

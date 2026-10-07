@@ -2916,7 +2916,6 @@ async def test_download_support_package(
     assert await req.text() == snapshot
 
 
-@patch("homeassistant.components.cloud.helpers.FixedSizeQueueLogHandler.MAX_RECORDS", 3)
 @pytest.mark.usefixtures("enable_custom_integrations")
 async def test_download_support_package_custom_components_error(
     hass: HomeAssistant,
@@ -3036,7 +3035,6 @@ async def test_download_support_package_custom_components_error(
     assert await req.text() == snapshot
 
 
-@patch("homeassistant.components.cloud.helpers.FixedSizeQueueLogHandler.MAX_RECORDS", 3)
 @pytest.mark.usefixtures("enable_custom_integrations")
 async def test_download_support_package_integration_load_error(
     hass: HomeAssistant,

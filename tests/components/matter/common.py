@@ -93,7 +93,6 @@ FIXTURES = [
     "mock_window_covering_full",
     "mock_window_covering_lift",
     "mock_window_covering_pa_lift",
-    "mock_window_covering_pa_lift_null_tilt",
     "mock_window_covering_pa_tilt",
     "mock_window_covering_tilt",
     "onoff_light_with_levelcontrol_present",

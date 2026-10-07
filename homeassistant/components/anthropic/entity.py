@@ -150,9 +150,7 @@ def _format_tool(
 ) -> ToolParam:
     """Format tool specification."""
     unsupported_keys = {"oneOf", "anyOf", "allOf"}
-    schema = to_openapi(
-        tool.parameters, custom_serializer=custom_serializer, openapi_version="3.1.0"
-    )
+    schema = to_openapi(tool.parameters, custom_serializer=custom_serializer)
     schema = {k: v for k, v in schema.items() if k not in unsupported_keys}
 
     return ToolParam(
@@ -1116,7 +1114,6 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
                             custom_serializer=chat_log.llm_api.custom_serializer
                             if chat_log.llm_api
                             else llm.selector_serializer,
-                            openapi_version="3.1.0",
                         ),
                         "additionalProperties": False,
                     },
@@ -1165,7 +1162,6 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
                             custom_serializer=chat_log.llm_api.custom_serializer
                             if chat_log.llm_api
                             else llm.selector_serializer,
-                            openapi_version="3.1.0",
                         ),
                     )
                 )

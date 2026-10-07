@@ -129,7 +129,6 @@ DEFAULT_MAX_HUMIDITY = 99
 
 DOMAIN: Final = "climate"
 
-INTENT_SET_FAN_MODE = "HassClimateSetFanMode"
 INTENT_SET_TEMPERATURE = "HassClimateSetTemperature"
 
 SERVICE_SET_FAN_MODE = "set_fan_mode"

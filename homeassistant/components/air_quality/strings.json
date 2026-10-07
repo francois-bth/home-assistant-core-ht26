@@ -276,7 +276,7 @@
       "name": "Volatile organic compounds value"
     }
   },
-  "title": "Air quality",
+  "title": "Air Quality",
   "triggers": {
     "co2_changed": {
       "description": "Triggers when one or more carbon dioxide levels change.",

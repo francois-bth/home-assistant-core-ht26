@@ -181,7 +181,7 @@ async def test_async_handle_source_entity_changes_source_entity_removed(
     assert generic_thermostat_entity_entry.device_id == switch_entity_entry.device_id
 
     source_device = device_registry.async_get(source_entity_entry.device_id)
-    assert source_device.config_entry_id != generic_thermostat_config_entry.entry_id
+    assert generic_thermostat_config_entry.entry_id not in source_device.config_entries
 
     events = track_entity_registry_actions(
         hass, generic_thermostat_entity_entry.entity_id
@@ -255,7 +255,7 @@ async def test_async_handle_source_entity_changes_source_entity_removed_shared_d
     assert generic_thermostat_entity_entry.device_id == switch_entity_entry.device_id
 
     source_device = device_registry.async_get(source_entity_entry.device_id)
-    assert source_device.config_entry_id != generic_thermostat_config_entry.entry_id
+    assert generic_thermostat_config_entry.entry_id not in source_device.config_entries
 
     events = track_entity_registry_actions(
         hass, generic_thermostat_entity_entry.entity_id
@@ -281,7 +281,7 @@ async def test_async_handle_source_entity_changes_source_entity_removed_shared_d
     # entry is not in the device
     source_device = device_registry.async_get(source_device.id)
     assert source_device is not None
-    assert source_device.config_entry_id != generic_thermostat_config_entry.entry_id
+    assert generic_thermostat_config_entry.entry_id not in source_device.config_entries
 
     # Check that the generic_thermostat config entry is not removed
     assert (
@@ -338,7 +338,7 @@ async def test_async_handle_source_entity_changes_source_entity_removed_from_dev
     assert generic_thermostat_entity_entry.device_id == switch_entity_entry.device_id
 
     source_device = device_registry.async_get(source_entity_entry.device_id)
-    assert source_device.config_entry_id != generic_thermostat_config_entry.entry_id
+    assert generic_thermostat_config_entry.entry_id not in source_device.config_entries
 
     events = track_entity_registry_actions(
         hass, generic_thermostat_entity_entry.entity_id
@@ -363,7 +363,7 @@ async def test_async_handle_source_entity_changes_source_entity_removed_from_dev
 
     # Check that the generic_thermostat config entry is not in the device
     source_device = device_registry.async_get(source_device.id)
-    assert source_device.config_entry_id != generic_thermostat_config_entry.entry_id
+    assert generic_thermostat_config_entry.entry_id not in source_device.config_entries
 
     # Check that the generic_thermostat config entry is not removed
     assert (
@@ -415,9 +415,11 @@ async def test_async_handle_source_entity_changes_source_entity_moved_other_devi
     assert generic_thermostat_entity_entry.device_id == switch_entity_entry.device_id
 
     source_device = device_registry.async_get(source_entity_entry.device_id)
-    assert source_device.config_entry_id != generic_thermostat_config_entry.entry_id
+    assert generic_thermostat_config_entry.entry_id not in source_device.config_entries
     source_device_2 = device_registry.async_get(source_device_2.id)
-    assert source_device_2.config_entry_id != generic_thermostat_config_entry.entry_id
+    assert (
+        generic_thermostat_config_entry.entry_id not in source_device_2.config_entries
+    )
 
     events = track_entity_registry_actions(
         hass, generic_thermostat_entity_entry.entity_id
@@ -443,9 +445,11 @@ async def test_async_handle_source_entity_changes_source_entity_moved_other_devi
 
     # Check that the generic_thermostat config entry is not in any of the devices
     source_device = device_registry.async_get(source_device.id)
-    assert source_device.config_entry_id != generic_thermostat_config_entry.entry_id
+    assert generic_thermostat_config_entry.entry_id not in source_device.config_entries
     source_device_2 = device_registry.async_get(source_device_2.id)
-    assert source_device_2.config_entry_id != generic_thermostat_config_entry.entry_id
+    assert (
+        generic_thermostat_config_entry.entry_id not in source_device_2.config_entries
+    )
 
     # Check that the generic_thermostat config entry is not removed
     assert (
@@ -495,7 +499,7 @@ async def test_async_handle_source_entity_new_entity_id(
     assert generic_thermostat_entity_entry.device_id == switch_entity_entry.device_id
 
     source_device = device_registry.async_get(source_entity_entry.device_id)
-    assert source_device.config_entry_id != generic_thermostat_config_entry.entry_id
+    assert generic_thermostat_config_entry.entry_id not in source_device.config_entries
 
     events = track_entity_registry_actions(
         hass, generic_thermostat_entity_entry.entity_id
@@ -517,7 +521,7 @@ async def test_async_handle_source_entity_new_entity_id(
 
     # Check that the helper config is not in the device
     source_device = device_registry.async_get(source_device.id)
-    assert source_device.config_entry_id != generic_thermostat_config_entry.entry_id
+    assert generic_thermostat_config_entry.entry_id not in source_device.config_entries
 
     # Check that the generic_thermostat config entry is not removed
     assert (
@@ -565,7 +569,7 @@ async def test_migration_1_1(
     # Check that the helper config entry is not on the source device and the helper
     # entity is linked to the source device
     switch_device = device_registry.async_get(switch_device.id)
-    assert switch_device.config_entry_id != generic_thermostat_config_entry.entry_id
+    assert generic_thermostat_config_entry.entry_id not in switch_device.config_entries
     generic_thermostat_entity_entry = entity_registry.async_get(
         "climate.mock_title_my_generic_thermostat"
     )

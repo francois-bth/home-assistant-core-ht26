@@ -1,8 +1,10 @@
 """Test the Liebherr number platform."""
 
 import copy
+from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 from pyliebherrhomeapi import (
     Device,
     DeviceState,
@@ -28,9 +30,9 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
-from .conftest import MOCK_DEVICE, SSEStreamHelper
+from .conftest import MOCK_DEVICE
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.fixture
@@ -119,6 +121,8 @@ async def test_set_temperature(
     """Test setting the temperature."""
     entity_id = "number.test_fridge_top_zone_setpoint"
 
+    initial_call_count = mock_liebherr_client.get_device_state.call_count
+
     await hass.services.async_call(
         NUMBER_DOMAIN,
         SERVICE_SET_VALUE,
@@ -132,6 +136,9 @@ async def test_set_temperature(
         target=6,
         unit=TemperatureUnit.CELSIUS,
     )
+
+    # Verify coordinator refresh was triggered
+    assert mock_liebherr_client.get_device_state.call_count > initial_call_count
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -213,7 +220,7 @@ async def test_set_temperature_failure(
 async def test_number_when_control_missing(
     hass: HomeAssistant,
     mock_liebherr_client: MagicMock,
-    sse_helper: SSEStreamHelper,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test number entity behavior when temperature control is removed."""
     entity_id = "number.test_fridge_top_zone_setpoint"
@@ -231,7 +238,10 @@ async def test_number_when_control_missing(
         device=MOCK_DEVICE, controls=[]
     )
 
-    await sse_helper.async_reconnect()
+    # Advance time to trigger coordinator refresh
+    freezer.tick(timedelta(seconds=61))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
     # State should be unavailable
     state = hass.states.get(entity_id)

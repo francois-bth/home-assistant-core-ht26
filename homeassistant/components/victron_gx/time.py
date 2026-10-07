@@ -2,13 +2,12 @@
 
 from datetime import time
 import logging
-from typing import TYPE_CHECKING, override
+from typing import TYPE_CHECKING, Any, override
 
 from victron_mqtt import (
     Device as VictronVenusDevice,
     Metric as VictronVenusMetric,
     MetricKind,
-    MetricValue,
     WritableMetric as VictronVenusWritableMetric,
 )
 
@@ -59,16 +58,11 @@ class VictronTime(VictronBaseEntity, TimeEntity):
     ) -> None:
         """Initialize the time entity."""
         super().__init__(device, metric, device_info, installation_id)
-        value = metric.value
-        if TYPE_CHECKING:
-            assert value is None or isinstance(value, int | float)
-        self._attr_native_value = VictronTime.victron_time_to_time(value)
+        self._attr_native_value = VictronTime.victron_time_to_time(metric.value)
 
     @callback
     @override
-    def _on_update_cb(self, value: MetricValue) -> None:
-        if TYPE_CHECKING:
-            assert value is None or isinstance(value, int | float)
+    def _on_update_cb(self, value: Any) -> None:
         self._attr_native_value = VictronTime.victron_time_to_time(value)
         self.async_write_ha_state()
 
@@ -87,7 +81,7 @@ class VictronTime(VictronBaseEntity, TimeEntity):
         self._metric.set(total_minutes)
 
     @staticmethod
-    def victron_time_to_time(value: float | None) -> time | None:
+    def victron_time_to_time(value: int | None) -> time | None:
         """Convert minutes since midnight to time object."""
         if value is None:
             return None

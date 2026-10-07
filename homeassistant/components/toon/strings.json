@@ -32,6 +32,9 @@
     },
     "invalid_response": {
       "message": "Received an invalid response from the Toon device."
+    },
+    "oauth2_implementation_unavailable": {
+      "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
     }
   }
 }

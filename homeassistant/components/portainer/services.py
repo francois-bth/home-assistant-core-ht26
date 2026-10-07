@@ -53,7 +53,7 @@ SERVICE_RECREATE_CONTAINER_SCHEMA = vol.Schema(
 @callback
 def _async_get_device_and_entry(
     call: ServiceCall, device_id: str
-) -> tuple[dr.AnyDeviceEntry, PortainerConfigEntry]:
+) -> tuple[dr.DeviceEntry, PortainerConfigEntry]:
     """Resolve and validate the device and Portainer config entry for a device ID."""
     entry: PortainerConfigEntry
     device, entry = service.async_get_device_and_config_entry(
@@ -64,7 +64,7 @@ def _async_get_device_and_entry(
 
 @callback
 def _async_get_endpoint_id(
-    device: dr.AnyDeviceEntry,
+    device: dr.DeviceEntry,
     config_entry: PortainerConfigEntry,
 ) -> int:
     """Get the endpoint ID from a device entry."""
@@ -85,7 +85,7 @@ def _async_get_endpoint_id(
 
 @callback
 def _async_get_container_and_endpoint_ids(
-    device: dr.AnyDeviceEntry,
+    device: dr.DeviceEntry,
     config_entry: PortainerConfigEntry,
 ) -> tuple[int, str]:
     """Get the endpoint ID and container ID from a container device entry."""
@@ -171,8 +171,7 @@ async def recreate_container(call: ServiceCall) -> None:
     await coordinator.async_request_refresh()
 
 
-@callback
-def async_setup_services(hass: HomeAssistant) -> None:
+async def async_setup_services(hass: HomeAssistant) -> None:
     """Set up services."""
 
     hass.services.async_register(

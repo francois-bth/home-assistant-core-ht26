@@ -2,7 +2,6 @@
 
 from enum import StrEnum
 import logging
-from typing import TYPE_CHECKING
 
 from homeassistant.const import (
     CONF_ADDRESS,
@@ -13,10 +12,6 @@ from homeassistant.const import (
     CONF_SWITCHES,
     Platform,
 )
-from homeassistant.util.hass_dict import HassKey
-
-if TYPE_CHECKING:
-    from .modbus import ModbusHub
 
 # configuration names
 CONF_BAUDRATE = "baudrate"
@@ -153,9 +148,11 @@ CALL_TYPE_X_REGISTER_HOLDINGS = "holdings"
 SERVICE_WRITE_COIL = "write_coil"
 SERVICE_WRITE_REGISTER = "write_register"
 SERVICE_STOP = "stop"
+SERVICE_RESTART = "restart"
 
 # dispatcher signals
-SIGNAL_STOP_ENTITY = "modbus.stop_{}"
+SIGNAL_STOP_ENTITY = "modbus.stop"
+SIGNAL_START_ENTITY = "modbus.start"
 
 # integration names
 DEFAULT_HUB = "modbus_hub"
@@ -167,8 +164,6 @@ DEFAULT_HVAC_ON_VALUE = 1
 DEFAULT_HVAC_OFF_VALUE = 0
 MODBUS_DOMAIN = "modbus"
 DOMAIN = "modbus"
-
-DATA_MODBUS_HUBS: HassKey[dict[str, ModbusHub]] = HassKey(DOMAIN)
 
 ACTIVE_SCAN_INTERVAL = 2  # limit to force an extra update
 

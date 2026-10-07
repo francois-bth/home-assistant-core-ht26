@@ -1,11 +1,9 @@
 """Coordinator for Zonneplan."""
 
-import asyncio
-from collections.abc import Coroutine
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING, Any, override
+from typing import TYPE_CHECKING, override
 
 from pyzonneplan import (
     Account,
@@ -64,34 +62,27 @@ class ZonneplanCoordinator(DataUpdateCoordinator[ZonneplanData]):
         """Fetch data from the Zonneplan API."""
         try:
             account = await self.zonneplan.async_get_account()
-            price_coroutines: dict[str, Coroutine[Any, Any, ConsumerPrices]] = {}
+            electricity_prices: ConsumerPrices | None = None
+            gas_prices: ConsumerPrices | None = None
 
-            if any(
-                connection.market_segment is not None
-                and "electricity" in connection.market_segment
-                for connection in account.connections
-            ):
-                price_coroutines["electricity"] = (
-                    self.zonneplan.async_get_consumer_prices(
+            # Depending per contract, fetch the associated consumer prices
+            for connection in account.connections:
+                if (
+                    "electricity" in connection.market_segment
+                    if connection.market_segment is not None
+                    else False
+                ):
+                    electricity_prices = await self.zonneplan.async_get_consumer_prices(
                         PriceChart.ELECTRICITY_HOURLY
                     )
-                )
-            if any(
-                connection.market_segment is not None
-                and "gas" in connection.market_segment
-                for connection in account.connections
-            ):
-                price_coroutines["gas"] = self.zonneplan.async_get_consumer_prices(
-                    PriceChart.GAS_DAILY
-                )
-
-            prices = dict(
-                zip(
-                    price_coroutines,
-                    await asyncio.gather(*price_coroutines.values()),
-                    strict=True,
-                )
-            )
+                if (
+                    "gas" in connection.market_segment
+                    if connection.market_segment is not None
+                    else False
+                ):
+                    gas_prices = await self.zonneplan.async_get_consumer_prices(
+                        PriceChart.GAS_DAILY
+                    )
         except ZonneplanAuthenticationError as err:
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
@@ -120,6 +111,6 @@ class ZonneplanCoordinator(DataUpdateCoordinator[ZonneplanData]):
 
         return ZonneplanData(
             account=account,
-            electricity_prices=prices.get("electricity"),
-            gas_prices=prices.get("gas"),
+            electricity_prices=electricity_prices,
+            gas_prices=gas_prices,
         )

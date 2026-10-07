@@ -364,7 +364,7 @@ async def test_remove_orphaned_entries_service(
             [
                 entry
                 for entry in device_registry.devices
-                if entry.config_entry_id == config_entry_setup.entry_id
+                if config_entry_setup.entry_id in entry.config_entries
             ]
         )
         == 4  # Gateway, light, switch and orphan
@@ -400,7 +400,7 @@ async def test_remove_orphaned_entries_service(
             [
                 entry
                 for entry in device_registry.devices
-                if entry.config_entry_id == config_entry_setup.entry_id
+                if config_entry_setup.entry_id in entry.config_entries
             ]
         )
         == 3  # Gateway, light and switch

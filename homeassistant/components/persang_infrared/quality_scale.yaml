@@ -100,7 +100,10 @@ rules:
     status: exempt
     comment: |
       This integration does not raise exceptions.
-  icon-translations: done
+  icon-translations:
+    status: exempt
+    comment: |
+      This integration does not use custom icons.
   reconfiguration-flow: todo
   repair-issues:
     status: exempt

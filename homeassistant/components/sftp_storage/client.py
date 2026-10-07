@@ -13,7 +13,7 @@ from asyncssh import (
     SSHClientConnectionOptions,
     connect,
 )
-from asyncssh.misc import Error as SSHError, PermissionDenied
+from asyncssh.misc import PermissionDenied
 from asyncssh.sftp import SFTPNoSuchFile, SFTPPermissionDenied
 
 from homeassistant.components.backup import (
@@ -27,10 +27,6 @@ from .const import BUF_SIZE, LOGGER
 
 if TYPE_CHECKING:
     from . import SFTPConfigEntry, SFTPConfigEntryData
-
-
-class SFTPConnectionError(BackupAgentError):
-    """Error raised when the SSH connection could not be established."""
 
 
 def get_client_options(cfg: SFTPConfigEntryData) -> SSHClientConnectionOptions:
@@ -299,16 +295,11 @@ class BackupAgentClient:
                     get_client_options, self.cfg.runtime_data
                 ),
             )
-        except PermissionDenied as e:
+        except (OSError, PermissionDenied) as e:
             raise BackupAgentError(
                 "Failure while attempting to establish SSH"
                 " connection. Please check SSH credentials"
                 " and if changed, re-install the integration"
-            ) from e
-        except (OSError, SSHError) as e:
-            raise SFTPConnectionError(
-                f"Failed to establish SSH connection to"
-                f" {self.cfg.runtime_data.host}: {e}"
             ) from e
 
         # Configure SFTP Client Connection
@@ -319,10 +310,6 @@ class BackupAgentClient:
             raise BackupAgentError(
                 "Failed to create SFTP client."
                 " Re-installing integration might be required"
-            ) from e
-        except (OSError, SSHError) as e:
-            raise SFTPConnectionError(
-                f"Failed to open SFTP session on {self.cfg.runtime_data.host}: {e}"
             ) from e
 
         return self

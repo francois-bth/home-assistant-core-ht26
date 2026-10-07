@@ -6,21 +6,21 @@ from unittest.mock import MagicMock, call, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.avea.const import UNKNOWN_NAME
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_HS_COLOR,
-    LightEntityStateAttribute,
+    ATTR_SUPPORTED_COLOR_MODES,
+    ColorMode,
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import device_registry as dr
 
 from . import AVEA_DISCOVERY_INFO, AVEA_FIRMWARE_VERSION, AVEA_SERIAL_NUMBER
 
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.fixture
@@ -63,16 +63,16 @@ async def setup_integration(
         yield mock_bulb
 
 
-@pytest.mark.usefixtures("setup_integration")
-async def test_all_entities(
+async def test_init_state(
     hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    mock_config_entry: MockConfigEntry,
-    snapshot: SnapshotAssertion,
+    setup_integration: MagicMock,
 ) -> None:
-    """Test all entities."""
-
-    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+    """Test the initial state."""
+    state = hass.states.get("light.bedroom")
+    assert state is not None
+    assert state.state == STATE_OFF
+    assert state.name == "Bedroom"
+    assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.HS]
 
 
 async def test_device_info(
@@ -257,7 +257,7 @@ async def test_turn_on_restores_last_brightness(
 
     state = hass.states.get("light.bedroom")
     assert state is not None
-    assert state.attributes[LightEntityStateAttribute.BRIGHTNESS] == 200
+    assert state.attributes[ATTR_BRIGHTNESS] == 200
 
     bulb.set_brightness.reset_mock()
     await hass.services.async_call(
@@ -280,7 +280,7 @@ async def test_turn_on_restores_last_brightness(
     state = hass.states.get("light.bedroom")
     assert state is not None
     assert state.state == STATE_OFF
-    assert state.attributes[LightEntityStateAttribute.BRIGHTNESS] is None
+    assert state.attributes[ATTR_BRIGHTNESS] is None
 
     bulb.set_brightness.reset_mock()
     await hass.services.async_call(
@@ -299,7 +299,7 @@ async def test_update_state(
     state = hass.states.get("light.bedroom")
     assert state is not None
     assert state.state == STATE_OFF
-    assert state.attributes[LightEntityStateAttribute.BRIGHTNESS] is None
+    assert state.attributes[ATTR_BRIGHTNESS] is None
 
     bulb = setup_integration
     bulb.reset_mock()
@@ -328,8 +328,8 @@ async def test_update_state(
     state = hass.states.get("light.bedroom")
     assert state is not None
     assert state.state == STATE_ON
-    assert state.attributes[LightEntityStateAttribute.BRIGHTNESS] == 128
-    assert state.attributes[LightEntityStateAttribute.HS_COLOR] == (120.0, 100.0)
+    assert state.attributes[ATTR_BRIGHTNESS] == 128
+    assert state.attributes[ATTR_HS_COLOR] == (120.0, 100.0)
 
 
 async def test_update_state_uses_cached_values_when_connect_fails(
@@ -354,5 +354,5 @@ async def test_update_state_uses_cached_values_when_connect_fails(
     state = hass.states.get("light.bedroom")
     assert state is not None
     assert state.state == STATE_ON
-    assert state.attributes[LightEntityStateAttribute.BRIGHTNESS] == 128
-    assert state.attributes[LightEntityStateAttribute.HS_COLOR] == (120.0, 100.0)
+    assert state.attributes[ATTR_BRIGHTNESS] == 128
+    assert state.attributes[ATTR_HS_COLOR] == (120.0, 100.0)

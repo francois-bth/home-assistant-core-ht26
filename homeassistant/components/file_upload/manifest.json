@@ -1,6 +1,6 @@
 {
   "domain": "file_upload",
-  "name": "File upload",
+  "name": "File Upload",
   "codeowners": ["@home-assistant/core"],
   "dependencies": ["http"],
   "documentation": "https://www.home-assistant.io/integrations/file_upload",

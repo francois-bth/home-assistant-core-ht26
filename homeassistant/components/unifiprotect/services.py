@@ -25,7 +25,6 @@ from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
     entity_registry as er,
-    service,
 )
 from homeassistant.helpers.target import (
     TargetSelection,
@@ -44,7 +43,7 @@ from .const import (
     KEYRINGS_USER_FULL_NAME,
     KEYRINGS_USER_STATUS,
 )
-from .data import UFPConfigEntry
+from .data import async_ufp_instance_for_config_entry_ids
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -105,24 +104,35 @@ PTZ_GOTO_PRESET_SCHEMA = vol.Schema(
 @callback
 def _async_get_ufp_instance(hass: HomeAssistant, device_id: str) -> ProtectApiClient:
     device_registry = dr.async_get(hass)
-    device_entry = device_registry.async_get(device_id)
+    if not (device_entry := device_registry.async_get(device_id)):
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="device_not_found",
+            translation_placeholders={"device_id": device_id},
+        )
 
     if isinstance(device_entry, dr.ChildDeviceEntry):
         return _async_get_ufp_instance(hass, device_entry.parent_device_id)
 
-    if device_entry is not None and device_entry.via_device_id is not None:
+    if device_entry.via_device_id is not None:
         return _async_get_ufp_instance(hass, device_entry.via_device_id)
 
-    _, config_entry = service.async_get_device_and_config_entry(hass, DOMAIN, device_id)
-    ufp_instance = cast(UFPConfigEntry, config_entry).runtime_data.api
-    if ufp_instance.is_public_only:
-        # Actions read/write through the private bootstrap, which an
-        # API-key-only entry never initializes.
-        raise HomeAssistantError(
-            translation_domain=DOMAIN,
-            translation_key="public_only_no_actions",
-        )
-    return ufp_instance
+    config_entry_ids = device_entry.config_entries
+    if ufp_instance := async_ufp_instance_for_config_entry_ids(hass, config_entry_ids):
+        if ufp_instance.is_public_only:
+            # Actions read/write through the private bootstrap, which an
+            # API-key-only entry never initializes.
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="public_only_no_actions",
+            )
+        return ufp_instance
+
+    raise HomeAssistantError(
+        translation_domain=DOMAIN,
+        translation_key="device_not_found",
+        translation_placeholders={"device_id": device_id},
+    )
 
 
 @callback

@@ -46,9 +46,8 @@ def async_get_entry_id_for_service_call(
 ) -> tuple[dr.DeviceEntry, AmazonConfigEntry]:
     """Get the entry ID related to a service call (by device ID)."""
     config_entry: AmazonConfigEntry
-    # Callers read the device's serial number, which only a main device has
     device, config_entry = service.async_get_device_and_config_entry(
-        call.hass, DOMAIN, call.data[ATTR_DEVICE_ID], include_child_devices=False
+        call.hass, DOMAIN, call.data[ATTR_DEVICE_ID]
     )
     return (device, config_entry)
 

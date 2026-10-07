@@ -198,6 +198,7 @@ async def async_setup_entry(
             (
                 GoogleWeatherSensor(coordinator, subentry, description)
                 for description in SENSOR_TYPES
+                if description.value_fn(coordinator.data) is not None
             ),
             config_subentry_id=subentry.subentry_id,
         )

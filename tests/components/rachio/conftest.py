@@ -30,7 +30,7 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_rachio(request: pytest.FixtureRequest) -> Generator[MagicMock]:
+def mock_rachio() -> Generator[MagicMock]:
     """Return a mocked Rachio client."""
     with patch(
         "homeassistant.components.rachio.Rachio",
@@ -46,21 +46,9 @@ def mock_rachio(request: pytest.FixtureRequest) -> Generator[MagicMock]:
             {
                 "username": "testuser",
                 "id": "test-user-id",
-                "devices": getattr(request, "param", []),
+                "devices": [],
             },
         )
-        rachio.notification.get_device_webhook.return_value = ({"status": 200}, [])
-        rachio.notification.get_webhook_event_type.return_value = (
-            {"status": 200},
-            [],
-        )
-        rachio.notification.add.return_value = (
-            {"status": 200},
-            {"id": "test-device-webhook-id"},
-        )
-        rachio.device.current_schedule.return_value = ({"status": 200}, {})
-        rachio.device.stop_water.return_value = ({"status": 204}, {})
-        rachio.zone.start.return_value = ({"status": 204}, {})
         rachio.valve.list_base_stations.return_value = (
             {"status": 200},
             {

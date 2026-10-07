@@ -3,6 +3,9 @@
     "reload": {
       "service": "mdi:reload"
     },
+    "restart": {
+      "service": "mdi:restart"
+    },
     "stop": {
       "service": "mdi:stop"
     },

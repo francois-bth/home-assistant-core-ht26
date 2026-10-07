@@ -2,7 +2,6 @@
 
 from pathlib import Path
 from types import MappingProxyType
-from typing import Any, cast
 
 import openai
 from openai.types.images_response import ImagesResponse
@@ -283,8 +282,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpenAIConfigEntry) -> bo
     """Set up OpenAI Conversation from a config entry."""
     client = openai.AsyncOpenAI(
         api_key=entry.data[CONF_API_KEY],
-        # Legacy HTTPX clients are supported at runtime only.
-        http_client=cast(Any, get_async_client(hass)),
+        http_client=get_async_client(hass),
     )
 
     # Cache current platform data which gets added to each request
@@ -292,7 +290,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpenAIConfigEntry) -> bo
     _ = await hass.async_add_executor_job(client.platform_headers)
 
     try:
-        await client.models.list(timeout=10.0)
+        await hass.async_add_executor_job(client.with_options(timeout=10.0).models.list)
     except openai.AuthenticationError as err:
         raise ConfigEntryAuthFailed(err) from err
     except openai.OpenAIError as err:

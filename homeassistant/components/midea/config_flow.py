@@ -14,7 +14,6 @@ from midealocal.const import DeviceType, ProtocolVersion
 from midealocal.device import MideaDevice
 from midealocal.devices import device_selector
 from midealocal.discover import discover
-from midealocal.exceptions import MideaCloudError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -32,9 +31,7 @@ from homeassistant.const import (
     CONF_TYPE,
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
-from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .const import (
     CONF_ACCOUNT,
@@ -77,7 +74,7 @@ def _select_and_connect(
 
     Returns None if there is no device implementation for device_type.
     """
-    dm: MideaDevice | None = device_selector(
+    dm = device_selector(
         "",
         device_id,
         device_type,
@@ -113,8 +110,6 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
         self.supports: dict = {}
         self.cloud: MideaCloud | None = None
         self._login_data: dict[str, str] | None = None
-        self._cloud_error: str | None = None
-        self._cloud_error_code: int | None = None
         unsorted = dict(MIDEA_DEVICE_NAMES)
 
         # sort and assign supports
@@ -130,32 +125,9 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
         self.preset_cloud_name: str = preset_account["cloud_name"]
 
     def _clear_login_state(self) -> None:
-        """Clear flow-scoped credentials and cloud.
-
-        The pending cloud error/code are intentionally left in place: this is
-        called right before re-showing a form that still needs to render that
-        error. They are refreshed on the next cloud call (``_check_cloud_login``
-        resets them) or when ``async_step_auto`` re-runs with input.
-        """
+        """Clear flow-scoped credentials and cloud."""
         self._login_data = None
         self.cloud = None
-
-    def _reset_cloud_error(self) -> None:
-        """Forget any cloud error carried over from a previous submit."""
-        self._cloud_error = None
-        self._cloud_error_code = None
-
-    def _form_error(self, error: str | None) -> dict[str, Any]:
-        """Build async_show_form error kwargs, adding the cloud error code if known."""
-        if not error:
-            return {"errors": None}
-        result: dict[str, Any] = {"errors": {"base": error}}
-        # only the cloud error slug carries a numeric code to show alongside it
-        if error == self._cloud_error and self._cloud_error_code is not None:
-            result["description_placeholders"] = {
-                "error_code": str(self._cloud_error_code)
-            }
-        return result
 
     def _already_configured(self, device_id: str, ip_address: str) -> bool:
         """Check device from json with device_id or ip address."""
@@ -223,7 +195,7 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
                 cloud_server_options,
                 default_server,
                 user_input=user_input,
-                error=self._cloud_error or "login_failed",
+                error="login_failed",
             )
         # user not login, show login form in UI
         return self._show_login_credentials_form(
@@ -260,7 +232,7 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="login_credentials",
             data_schema=schema,
-            **self._form_error(error),
+            errors={"base": error} if error else None,
         )
 
     async def async_step_auth_method(
@@ -287,7 +259,7 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
 
             return await self.async_step_auth_method(
-                error=self._cloud_error or "preset_login_failed",
+                error="preset_login_failed",
             )
 
         return self.async_show_form(
@@ -308,7 +280,7 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
                     ),
                 }
             ),
-            **self._form_error(error),
+            errors={"base": error} if error else None,
         )
 
     async def async_step_list(
@@ -411,16 +383,8 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
                 account,
                 password,
             )
-        self._reset_cloud_error()
         # check cloud login after self.cloud exist
-        try:
-            logged_in = await self.cloud.login()
-        except MideaCloudError as err:
-            LOGGER.debug("Cloud login to %s failed: %s", cloud_name, err)
-            self._cloud_error = err.translation_key
-            self._cloud_error_code = err.code
-            return False
-        if logged_in:
+        if await self.cloud.login():
             LOGGER.debug(
                 "Cloud login succeeded for %s",
                 cloud_name,
@@ -444,20 +408,7 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
         assert self.cloud is not None
 
         # get device token/key from cloud, plus the well-known default keys
-        try:
-            keys = await self.cloud.get_cloud_keys(appliance_id)
-        except MideaCloudError as err:
-            # A cloud rejection (e.g. code 3201) is not fatal: a V3 device may
-            # still authenticate with a built-in default key. Remember the error
-            # for display and keep going with the default keys only.
-            LOGGER.debug(
-                "Cloud rejected the token request for device %s: %s",
-                appliance_id,
-                err,
-            )
-            self._cloud_error = err.translation_key
-            self._cloud_error_code = err.code
-            keys = {}
+        keys = await self.cloud.get_cloud_keys(appliance_id)
         if default_key:
             keys = {**keys, **(await MideaCloud.get_default_keys())}
         error = "connect_error"
@@ -494,10 +445,7 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
         LOGGER.debug(
             "Unable to connect device with all the token/key",
         )
-        result: dict[str, Any] = {"error": error}
-        if self._cloud_error is not None:
-            result["cloud_error"] = self._cloud_error
-        return result
+        return {"error": error}
 
     async def async_step_auto(
         self,
@@ -507,7 +455,6 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
         """Discovery device detail info."""
         # input device exist
         if user_input is not None:
-            self._reset_cloud_error()
             device_id = user_input[CONF_DEVICE]
             device = self.devices[device_id]
             self.found_device = {
@@ -537,10 +484,6 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
 
                 # phase 1, try with user input login data
                 keys = await self._check_key_from_cloud(device_id)
-                # _check_key_from_cloud sets the pending cloud error/code on a
-                # cloud rejection; keep phase 1's in case phase 2 is less specific
-                phase1_error = self._cloud_error
-                phase1_error_code = self._cloud_error_code
 
                 # no available key, continue the phase 2
                 if not keys.get("token") or not keys.get("key"):
@@ -551,14 +494,10 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
 
                     # get key phase 2: reinit cloud with preset account
                     if not await self._check_cloud_login(force_login=True):
-                        # _check_cloud_login clears the pending error; if it only
-                        # returned False (no raise), fall back to phase 1's error.
-                        if not self._cloud_error and phase1_error:
-                            self._cloud_error = phase1_error
-                            self._cloud_error_code = phase1_error_code
-                        error = self._cloud_error or "preset_login_failed"
                         self._clear_login_state()
-                        return await self.async_step_auto(error=error)
+                        return await self.async_step_auto(
+                            error="preset_login_failed",
+                        )
                     # try to get a passed key, without default_key
                     keys = await self._check_key_from_cloud(
                         device_id,
@@ -571,12 +510,10 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
                             "Can't get available token from Midea server for device %s",
                             device_id,
                         )
-                        if not self._cloud_error and phase1_error:
-                            self._cloud_error = phase1_error
-                            self._cloud_error_code = phase1_error_code
-                        error = self._cloud_error or "token_unavailable"
                         self._clear_login_state()
-                        return await self.async_step_auto(error=error)
+                        return await self.async_step_auto(
+                            error="token_unavailable",
+                        )
                 # get key pass
                 self.found_device[CONF_TOKEN] = keys["token"]
                 self.found_device[CONF_KEY] = keys["key"]
@@ -600,7 +537,7 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
                     ): vol.In(self.available_device),
                 },
             ),
-            **self._form_error(error),
+            errors={"base": error} if error else None,
         )
 
     def _found_device_to_user_input(self) -> dict[str, Any]:
@@ -739,7 +676,7 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
                 if not result:
                     return self._show_manually_form(
                         user_input,
-                        error=self._cloud_error or "preset_login_failed",
+                        error="preset_login_failed",
                     )
                 # try to get a passed key
                 keys = await self._check_key_from_cloud(int(user_input[CONF_DEVICE_ID]))
@@ -752,7 +689,7 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
                     )
                     return self._show_manually_form(
                         user_input,
-                        error=keys.get("cloud_error") or "token_unavailable",
+                        error="token_unavailable",
                     )
 
                 # set token/key from preset account
@@ -778,42 +715,6 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
 
             return await self._async_create_midea_entry(user_input)
         return self._show_manually_form(user_input, error)
-
-    async def async_step_reconfigure(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Allow reconfiguration of a Midea config entry."""
-        entry = self._get_reconfigure_entry()
-        error = None
-        if user_input is not None:
-            devices = await self.hass.async_add_executor_job(
-                lambda: discover(
-                    list(self.supports.keys()), ip_address=user_input[CONF_IP_ADDRESS]
-                ),
-            )
-            entry_device_id = entry.data[CONF_DEVICE_ID]
-            device = devices.get(entry_device_id)
-            if len(devices) == 0:
-                error = "invalid_device_ip"
-            elif device is None:
-                error = "invalid_device_id_for_ip"
-            else:
-                return self.async_update_reload_and_abort(
-                    entry,
-                    data_updates={CONF_IP_ADDRESS: device.get(CONF_IP_ADDRESS)},
-                )
-        return self.async_show_form(
-            step_id="reconfigure",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(
-                        CONF_IP_ADDRESS,
-                        default=(user_input or entry.data)[CONF_IP_ADDRESS],
-                    ): str
-                }
-            ),
-            errors={"base": error} if error else None,
-        )
 
     def _show_manually_form(
         self,
@@ -869,31 +770,5 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="manually",
             data_schema=schema,
-            **self._form_error(error),
+            errors={"base": error} if error else None,
         )
-
-    @override
-    async def async_step_dhcp(
-        self, discovery_info: DhcpServiceInfo
-    ) -> ConfigFlowResult:
-        """Handle DHCP discovery of a known Midea device.
-
-        Only devices already configured (matched via ``registered_devices``)
-        reach this step. It is used to keep the stored host in sync with the
-        current IP address of the device.
-        """
-        mac = format_mac(discovery_info.macaddress)
-        for entry in self._async_current_entries():
-            if (entry_mac := entry.data.get(CONF_MAC)) is None or format_mac(
-                entry_mac
-            ) != mac:
-                continue
-            if entry.data[CONF_IP_ADDRESS] != discovery_info.ip:
-                self.hass.config_entries.async_update_entry(
-                    entry,
-                    data=entry.data | {CONF_IP_ADDRESS: discovery_info.ip},
-                )
-                self.hass.config_entries.async_schedule_reload(entry.entry_id)
-            return self.async_abort(reason="already_configured")
-
-        return self.async_abort(reason="no_devices_found")

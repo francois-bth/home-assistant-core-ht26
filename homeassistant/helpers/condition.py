@@ -9,6 +9,7 @@ from datetime import datetime, time as dt_time, timedelta
 import functools as ft
 import inspect
 import logging
+import re
 import sys
 from typing import (
     TYPE_CHECKING,
@@ -149,6 +150,10 @@ _PLATFORM_ALIASES: dict[str | None, str | None] = {
     "time": None,
     "trigger": None,
 }
+
+INPUT_ENTITY_ID = re.compile(
+    r"^input_(?:select|text|number|boolean|datetime)\.(?!.+__)(?!_)[\da-z_]+(?<!_)$"
+)
 
 
 CONDITION_DESCRIPTION_CACHE: HassKey[dict[str, dict[str, Any] | None]] = HassKey(
@@ -1727,7 +1732,7 @@ def state(
         state_value = req_state_value
         if (
             isinstance(req_state_value, str)
-            and cv.INPUT_ENTITY_ID.match(req_state_value) is not None
+            and INPUT_ENTITY_ID.match(req_state_value) is not None
         ):
             if not (state_entity := hass.states.get(req_state_value)):
                 raise ConditionErrorMessage(

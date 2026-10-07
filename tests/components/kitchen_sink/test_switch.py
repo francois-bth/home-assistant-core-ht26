@@ -17,10 +17,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
-SWITCH_ENTITY_IDS = [
-    "switch.power_strip_with_2_sockets_outlet_1",
-    "switch.power_strip_with_2_sockets_outlet_2",
-]
+SWITCH_ENTITY_IDS = ["switch.outlet_1", "switch.outlet_2"]
 
 
 @pytest.fixture

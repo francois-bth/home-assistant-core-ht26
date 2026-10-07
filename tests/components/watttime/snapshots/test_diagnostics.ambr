@@ -2,7 +2,11 @@
 # name: test_entry_diagnostics
   dict({
     'data': dict({
-      'percent': 96.0,
+      'ba': 'CAISO_NORTH',
+      'freq': '300',
+      'moer': '850.743982',
+      'percent': '53',
+      'point_time': '2019-01-29T14:55:00.00Z',
     }),
     'entry': dict({
       'data': dict({

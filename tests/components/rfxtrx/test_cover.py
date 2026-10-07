@@ -4,17 +4,20 @@ from unittest.mock import call
 
 import pytest
 
+from homeassistant.components.rfxtrx import DOMAIN
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
 
-from .conftest import create_rfx_test_entry
+from .conftest import create_rfx_test_cfg
 
-from tests.common import mock_restore_cache
+from tests.common import MockConfigEntry, mock_restore_cache
 
 
 async def test_one_cover(hass: HomeAssistant, rfxtrx) -> None:
     """Test with 1 cover."""
-    mock_entry = create_rfx_test_entry(devices={"0b1400cd0213c7f20d010f51": {}})
+    entry_data = create_rfx_test_cfg(devices={"0b1400cd0213c7f20d010f51": {}})
+    mock_entry = MockConfigEntry(domain=DOMAIN, unique_id=DOMAIN, data=entry_data)
+
     mock_entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(mock_entry.entry_id)
@@ -59,7 +62,9 @@ async def test_state_restore(hass: HomeAssistant, rfxtrx, state) -> None:
 
     mock_restore_cache(hass, [State(entity_id, state)])
 
-    mock_entry = create_rfx_test_entry(devices={"0b1400cd0213c7f20d010f51": {}})
+    entry_data = create_rfx_test_cfg(devices={"0b1400cd0213c7f20d010f51": {}})
+    mock_entry = MockConfigEntry(domain=DOMAIN, unique_id=DOMAIN, data=entry_data)
+
     mock_entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(mock_entry.entry_id)
@@ -70,13 +75,15 @@ async def test_state_restore(hass: HomeAssistant, rfxtrx, state) -> None:
 
 async def test_several_covers(hass: HomeAssistant, rfxtrx) -> None:
     """Test with 3 covers."""
-    mock_entry = create_rfx_test_entry(
+    entry_data = create_rfx_test_cfg(
         devices={
             "0b1400cd0213c7f20d010f51": {},
             "0A1400ADF394AB010D0060": {},
             "09190000009ba8010100": {},
         }
     )
+    mock_entry = MockConfigEntry(domain=DOMAIN, unique_id=DOMAIN, data=entry_data)
+
     mock_entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(mock_entry.entry_id)
@@ -115,12 +122,14 @@ async def test_discover_covers(hass: HomeAssistant, rfxtrx_automatic) -> None:
 
 async def test_duplicate_cover(hass: HomeAssistant, rfxtrx) -> None:
     """Test with 2 duplicate covers."""
-    mock_entry = create_rfx_test_entry(
+    entry_data = create_rfx_test_cfg(
         devices={
             "0b1400cd0213c7f20d010f51": {},
             "0b1400cd0213c7f20d010f50": {},
         }
     )
+    mock_entry = MockConfigEntry(domain=DOMAIN, unique_id=DOMAIN, data=entry_data)
+
     mock_entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(mock_entry.entry_id)
@@ -134,7 +143,7 @@ async def test_duplicate_cover(hass: HomeAssistant, rfxtrx) -> None:
 
 async def test_rfy_cover(hass: HomeAssistant, rfxtrx) -> None:
     """Test Rfy venetian blind covers."""
-    mock_entry = create_rfx_test_entry(
+    entry_data = create_rfx_test_cfg(
         devices={
             "071a000001020301": {
                 "venetian_blind_mode": "Unknown",
@@ -146,6 +155,8 @@ async def test_rfy_cover(hass: HomeAssistant, rfxtrx) -> None:
             "0c1a0000010203030000000000": {"venetian_blind_mode": "EU"},
         }
     )
+    mock_entry = MockConfigEntry(domain=DOMAIN, unique_id=DOMAIN, data=entry_data)
+
     mock_entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(mock_entry.entry_id)

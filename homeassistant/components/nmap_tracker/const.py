@@ -1,20 +1,14 @@
 """The Nmap Tracker integration."""
 
-from typing import TYPE_CHECKING, Final
+from typing import Final
 
 from homeassistant.const import Platform
-from homeassistant.util.hass_dict import HassKey
-
-if TYPE_CHECKING:
-    from . import NmapTrackedDevices
 
 DOMAIN: Final = "nmap_tracker"
 
 PLATFORMS: Final = [Platform.DEVICE_TRACKER]
 
-# Tracked devices are keyed by MAC across every config entry, so the registry
-# is shared rather than owned by any one entry.
-NMAP_TRACKER_DATA: HassKey[NmapTrackedDevices] = HassKey(DOMAIN)
+NMAP_TRACKED_DEVICES: Final = "nmap_tracked_devices"
 
 # Interval in minutes to exclude devices from a scan while they are home
 CONF_HOME_INTERVAL: Final = "home_interval"

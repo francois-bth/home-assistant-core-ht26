@@ -2,8 +2,6 @@
 
 from pyimouapi.const import (
     PARAM_BATTERY,
-    PARAM_COLLECTION_POINT,
-    PARAM_COLLECTION_POINT_PROMPT,
     PARAM_CURRENT_OPTION,
     PARAM_DEVICE_VOLUME,
     PARAM_MOTION_DETECT,
@@ -64,14 +62,6 @@ DEFAULT_SELECTS = {
     PARAM_DEVICE_VOLUME: {
         PARAM_CURRENT_OPTION: "medium",
         PARAM_OPTIONS: ["mute", "low", "medium", "high"],
-    },
-    PARAM_COLLECTION_POINT: {
-        PARAM_CURRENT_OPTION: PARAM_COLLECTION_POINT_PROMPT,
-        PARAM_OPTIONS: [
-            PARAM_COLLECTION_POINT_PROMPT,
-            "Front door",
-            "Back yard",
-        ],
     },
 }
 

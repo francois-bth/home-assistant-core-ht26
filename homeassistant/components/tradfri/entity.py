@@ -6,7 +6,6 @@ from functools import wraps
 from typing import Any, cast, override
 
 from pytradfri.command import Command
-from pytradfri.const import ATTR_DEVICE_FIRMWARE_VERSION
 from pytradfri.device import Device
 from pytradfri.error import RequestError
 
@@ -62,7 +61,7 @@ class TradfriBaseEntity(CoordinatorEntity[TradfriDeviceDataUpdateCoordinator]):
             manufacturer=info.manufacturer,
             model=info.model_number,
             name=self._device.name,
-            sw_version=info.raw.get(ATTR_DEVICE_FIRMWARE_VERSION),
+            sw_version=info.firmware_version,
             via_device_id=dr.async_get_device_id_by_identifier(
                 device_coordinator.hass,
                 (DOMAIN, gateway_id),

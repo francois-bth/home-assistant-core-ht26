@@ -61,7 +61,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: IndevoltConfigEntry) -> 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up indevolt services (actions)."""
 
-    async_setup_services(hass)
+    await async_setup_services(hass)
 
     return True
 
