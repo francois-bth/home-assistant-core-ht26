@@ -342,13 +342,16 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
 
         try:
             start_time = dt_util.utcnow()
+            stop_event = asyncio.Event()
             while (dt_util.utcnow() - start_time) < LEARNING_TIMEOUT:
-                await asyncio.sleep(1)
                 try:
                     code = await device.async_request(device.api.check_data)
-                except ReadError, StorageError:
-                    continue
-                return b64encode(code).decode("utf8")
+                    return b64encode(code).decode("utf8")
+                except (ReadError, StorageError):
+                    try:
+                        await asyncio.wait_for(stop_event.wait(), timeout=0.5)
+                    except TimeoutError:
+                        pass
 
             raise TimeoutError(
                 "No infrared code received within "
@@ -380,14 +383,18 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
 
         try:
             start_time = dt_util.utcnow()
+            stop_event = asyncio.Event()
             while (dt_util.utcnow() - start_time) < LEARNING_TIMEOUT:
-                await asyncio.sleep(1)
                 is_found, frequency = await device.async_request(
                     device.api.check_frequency
                 )
                 if is_found:
                     _LOGGER.debug("Radiofrequency detected: %s MHz", frequency)
                     break
+                try:
+                    await asyncio.wait_for(stop_event.wait(), timeout=0.5)
+                except TimeoutError:
+                    pass
             else:
                 await device.async_request(device.api.cancel_sweep_frequency)
                 raise TimeoutError(
@@ -418,13 +425,16 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
 
         try:
             start_time = dt_util.utcnow()
+            stop_event = asyncio.Event()
             while (dt_util.utcnow() - start_time) < LEARNING_TIMEOUT:
-                await asyncio.sleep(1)
                 try:
                     code = await device.async_request(device.api.check_data)
-                except ReadError, StorageError:
-                    continue
-                return b64encode(code).decode("utf8")
+                    return b64encode(code).decode("utf8")
+                except (ReadError, StorageError):
+                    try:
+                        await asyncio.wait_for(stop_event.wait(), timeout=0.5)
+                    except TimeoutError:
+                        pass
 
             raise TimeoutError(
                 "No radiofrequency code received within "
