@@ -101,9 +101,6 @@ DEVICE_TYPE_NUMBER_MAP: dict[DeviceType, tuple[NumberEntityDescription, ...]] = 
         TIMER_NUMBER_DESC[ThinQProperty.RELATIVE_HOUR_TO_STOP],
         TIMER_NUMBER_DESC[ThinQProperty.SLEEP_TIMER_RELATIVE_HOUR_TO_STOP],
     ),
-    DeviceType.AIR_PURIFIER: (
-        TIMER_NUMBER_DESC[ThinQProperty.SLEEP_TIMER_RELATIVE_HOUR_TO_STOP],
-    ),
     DeviceType.AIR_PURIFIER_FAN: (
         NUMBER_DESC[ThinQProperty.WIND_TEMPERATURE],
         TIMER_NUMBER_DESC[ThinQProperty.SLEEP_TIMER_RELATIVE_HOUR_TO_STOP],

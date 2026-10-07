@@ -41,8 +41,8 @@ SET_ZONE_OVERRIDE_SCHEMA = vol.Schema(
 
 
 @callback
-def async_setup_services(hass: HomeAssistant) -> None:
-    """Register the Genius Hub services."""
+def setup_service_functions(hass: HomeAssistant) -> None:
+    """Set up the service functions."""
 
     @verify_domain_control(DOMAIN)
     async def set_zone_mode(call: ServiceCall) -> None:

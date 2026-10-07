@@ -4,11 +4,6 @@
       "vehicle_location": {
         "default": "mdi:car"
       }
-    },
-    "sensor": {
-      "heading": {
-        "default": "mdi:compass"
-      }
     }
   }
 }

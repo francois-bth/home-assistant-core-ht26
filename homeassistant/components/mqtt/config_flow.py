@@ -52,6 +52,7 @@ from homeassistant.components.sensor import (
     DEVICE_CLASS_UNITS,
     STATE_CLASS_UNITS,
     SensorDeviceClass,
+    SensorStateClass,
 )
 from homeassistant.components.valve import ValveState
 from homeassistant.config_entries import (
@@ -121,7 +122,6 @@ from homeassistant.helpers.selector import (
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
-    StateClassSelector,
     TemplateSelector,
     TemplateSelectorConfig,
     TextSelector,
@@ -761,7 +761,13 @@ SENSOR_ENTITY_CATEGORY_SELECTOR = SelectSelector(
         sort=True,
     )
 )
-SENSOR_STATE_CLASS_SELECTOR = StateClassSelector()
+SENSOR_STATE_CLASS_SELECTOR = SelectSelector(
+    SelectSelectorConfig(
+        options=[device_class.value for device_class in SensorStateClass],
+        mode=SelectSelectorMode.DROPDOWN,
+        translation_key=CONF_STATE_CLASS,
+    )
+)
 STEP_SELECTOR = NumberSelector(NumberSelectorConfig(min=1e-3, step=1e-3))
 SUPPORTED_COLOR_MODES_SELECTOR = SelectSelector(
     SelectSelectorConfig(

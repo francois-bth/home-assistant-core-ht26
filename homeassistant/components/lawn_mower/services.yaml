@@ -20,10 +20,3 @@ pause:
       domain: lawn_mower
       supported_features:
         - lawn_mower.LawnMowerEntityFeature.PAUSE
-
-stop:
-  target:
-    entity:
-      domain: lawn_mower
-      supported_features:
-        - lawn_mower.LawnMowerEntityFeature.STOP

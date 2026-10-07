@@ -29,7 +29,7 @@ PLATFORMS: list[Platform] = [
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the UniFi Access integration."""
-    async_setup_services(hass)
+    await async_setup_services(hass)
     return True
 
 

@@ -199,7 +199,6 @@ def mock_ufp_client(bootstrap: Bootstrap):
     client.public_bootstrap.lights = {}
     client.public_bootstrap.relays = {}
     client.public_bootstrap.sirens = {}
-    client.public_bootstrap.fobs = {}
     client.public_bootstrap.arm_profiles = {}
     client.public_bootstrap.arm_mode = None
     client.public_bootstrap.nvr = Mock()
@@ -230,7 +229,6 @@ def mock_ufp_client(bootstrap: Bootstrap):
         yield from pb.lights.values()
         yield from pb.relays.values()
         yield from pb.sirens.values()
-        yield from pb.fobs.values()
 
     client.public_bootstrap.all_devices = _public_all_devices
 
@@ -654,12 +652,7 @@ def mock_ufp_public_only_client() -> Mock:
     # them, so both helpers below read the attribute at call time.
     pb.cameras = {}
     pb.lights = {}
-    pb.fobs = {}
-    device_maps = {
-        ModelType.CAMERA: "cameras",
-        ModelType.LIGHT: "lights",
-        ModelType.FOB: "fobs",
-    }
+    device_maps = {ModelType.CAMERA: "cameras", ModelType.LIGHT: "lights"}
 
     def _all_devices(*, include_nvr: bool = False) -> Iterator[Mock]:
         if include_nvr and pb.nvr is not None:

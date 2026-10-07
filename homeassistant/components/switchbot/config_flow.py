@@ -482,7 +482,6 @@ class SwitchbotOptionsFlowHandler(OptionsFlow):
             SupportedModels.LOCK,
             SupportedModels.LOCK_PRO,
             SupportedModels.LOCK_ULTRA,
-            SupportedModels.LOCK_ULTRA_MAX,
             SupportedModels.LOCK_PRO_WIFI,
             SupportedModels.LOCK_VISION,
             SupportedModels.LOCK_VISION_PRO,

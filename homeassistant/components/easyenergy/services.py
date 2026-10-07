@@ -6,7 +6,6 @@ from functools import partial
 from typing import Final
 
 from easyenergy import (
-    EasyEnergyError,
     Electricity,
     ElectricityGranularity,
     ElectricityPriceType,
@@ -24,7 +23,7 @@ from homeassistant.core import (
     SupportsResponse,
     callback,
 )
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import selector, service
 from homeassistant.util import dt as dt_util
 
@@ -193,33 +192,21 @@ async def __get_prices(
     prices: list[dict[str, float | datetime]]
 
     if service_price_type == ServicePriceType.GAS:
-        try:
-            data = await coordinator.easyenergy.gas_prices(
-                start_date=start_date,
-                end_date=end_date,
-                vat=vat,
-            )
-        except EasyEnergyError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="fetch_prices_error",
-            ) from err
+        data = await coordinator.easyenergy.gas_prices(
+            start_date=start_date,
+            end_date=end_date,
+            vat=vat,
+        )
         prices = __select_prices(
             data, call.data[ATTR_PRICE_TYPE] == ElectricityPriceType.INVOICE.value
         )
     else:
-        try:
-            data = await coordinator.easyenergy.energy_prices(
-                start_date=start_date,
-                end_date=end_date,
-                granularity=ElectricityGranularity(call.data[ATTR_GRANULARITY]),
-                vat=vat,
-            )
-        except EasyEnergyError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="fetch_prices_error",
-            ) from err
+        data = await coordinator.easyenergy.energy_prices(
+            start_date=start_date,
+            end_date=end_date,
+            granularity=ElectricityGranularity(call.data[ATTR_GRANULARITY]),
+            vat=vat,
+        )
 
         if service_price_type == ServicePriceType.ENERGY_USAGE:
             prices = __select_prices(

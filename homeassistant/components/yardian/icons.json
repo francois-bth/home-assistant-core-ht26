@@ -8,9 +8,9 @@
         "default": "mdi:pause-circle"
       },
       "watering_running": {
-        "default": "mdi:play-circle",
+        "default": "mdi:sprinkler",
         "state": {
-          "off": "mdi:play-circle-outline"
+          "off": "mdi:sprinkler-variant"
         }
       },
       "zone_enabled": {
@@ -18,11 +18,6 @@
         "state": {
           "off": "mdi:toggle-switch-off"
         }
-      }
-    },
-    "button": {
-      "stop_irrigation": {
-        "default": "mdi:stop-circle-outline"
       }
     },
     "sensor": {
@@ -41,16 +36,13 @@
     },
     "switch": {
       "switch": {
-        "default": "mdi:toggle-switch-variant",
-        "state": {
-          "off": "mdi:toggle-switch-variant-off"
-        }
+        "default": "mdi:water"
       }
     }
   },
   "services": {
     "start_irrigation": {
-      "service": "mdi:play-circle-outline"
+      "service": "mdi:water"
     }
   }
 }

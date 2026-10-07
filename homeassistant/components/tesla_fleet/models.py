@@ -1,7 +1,7 @@
 """The Tesla Fleet integration models."""
 
 import asyncio
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 from tesla_fleet_api.const import Scope
 from tesla_fleet_api.tesla import EnergySite, VehicleFleet
@@ -34,7 +34,7 @@ class TeslaFleetVehicleData:
     vin: str
     device: DeviceInfo
     signing: bool
-    wakelock: asyncio.Lock = field(default_factory=asyncio.Lock)
+    wakelock = asyncio.Lock()
 
 
 @dataclass

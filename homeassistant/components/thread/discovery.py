@@ -26,7 +26,6 @@ KNOWN_BRANDS: dict[str | None, str] = {
     "Apple": "apple",
     "Apple Inc.": "apple",
     "Aqara": "aqara_gateway",
-    "AthomBV": "homey",
     "eero": "eero",
     "GL.iNET Inc.": "glinet",
     "Google Inc.": "google",

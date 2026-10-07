@@ -4,7 +4,6 @@ from typing import override
 
 from tesla_fleet_api import firmware_at_least
 from tesla_fleet_api.const import Scope
-from tesla_fleet_api.router import VehicleRouter
 from tesla_fleet_api.teslemetry import Vehicle
 
 from homeassistant.components.media_player import (
@@ -65,7 +64,7 @@ async def async_setup_entry(
 class TeslemetryMediaEntity(TeslemetryRootEntity, MediaPlayerEntity):
     """Base vehicle media player class."""
 
-    api: Vehicle | VehicleRouter
+    api: Vehicle
     _attr_device_class = MediaPlayerDeviceClass.SPEAKER
     _attr_volume_step = VOLUME_STEP
 

@@ -1,5 +1,6 @@
 """Base entity for Liebherr integration."""
 
+import asyncio
 from collections.abc import Coroutine
 from typing import Any
 
@@ -14,7 +15,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, MANUFACTURER
+from .const import DOMAIN, MANUFACTURER, REFRESH_DELAY
 from .coordinator import LiebherrCoordinator
 
 # Zone position to translation key mapping
@@ -55,10 +56,7 @@ class LiebherrEntity(CoordinatorEntity[LiebherrCoordinator]):
         self,
         command: Coroutine[Any, Any, None],
     ) -> None:
-        """Send a command with error handling.
-
-        State updates arrive via the SSE stream — no explicit refresh needed.
-        """
+        """Send a command with error handling and delayed refresh."""
         try:
             await command
         except (LiebherrConnectionError, LiebherrTimeoutError) as err:
@@ -66,6 +64,9 @@ class LiebherrEntity(CoordinatorEntity[LiebherrCoordinator]):
                 translation_domain=DOMAIN,
                 translation_key="communication_error",
             ) from err
+
+        await asyncio.sleep(REFRESH_DELAY.total_seconds())
+        await self.coordinator.async_request_refresh()
 
 
 class LiebherrZoneEntity(LiebherrEntity):

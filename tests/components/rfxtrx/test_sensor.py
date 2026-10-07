@@ -2,6 +2,7 @@
 
 import pytest
 
+from homeassistant.components.rfxtrx import DOMAIN
 from homeassistant.components.rfxtrx.const import ATTR_EVENT
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
@@ -11,14 +12,16 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, State
 
-from .conftest import create_rfx_test_entry
+from .conftest import create_rfx_test_cfg
 
-from tests.common import mock_restore_cache
+from tests.common import MockConfigEntry, mock_restore_cache
 
 
 async def test_default_config(hass: HomeAssistant, rfxtrx) -> None:
     """Test with 0 sensor."""
-    mock_entry = create_rfx_test_entry(devices={})
+    entry_data = create_rfx_test_cfg(devices={})
+    mock_entry = MockConfigEntry(domain=DOMAIN, unique_id=DOMAIN, data=entry_data)
+
     mock_entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(mock_entry.entry_id)
@@ -29,7 +32,9 @@ async def test_default_config(hass: HomeAssistant, rfxtrx) -> None:
 
 async def test_one_sensor(hass: HomeAssistant, rfxtrx) -> None:
     """Test with 1 sensor."""
-    mock_entry = create_rfx_test_entry(devices={"0a52080705020095220269": {}})
+    entry_data = create_rfx_test_cfg(devices={"0a52080705020095220269": {}})
+    mock_entry = MockConfigEntry(domain=DOMAIN, unique_id=DOMAIN, data=entry_data)
+
     mock_entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(mock_entry.entry_id)
@@ -56,7 +61,9 @@ async def test_state_restore(hass: HomeAssistant, rfxtrx, state, event) -> None:
 
     mock_restore_cache(hass, [State(entity_id, state, attributes={ATTR_EVENT: event})])
 
-    mock_entry = create_rfx_test_entry(devices={"0a520801070100b81b0279": {}})
+    entry_data = create_rfx_test_cfg(devices={"0a520801070100b81b0279": {}})
+    mock_entry = MockConfigEntry(domain=DOMAIN, unique_id=DOMAIN, data=entry_data)
+
     mock_entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(mock_entry.entry_id)
@@ -67,7 +74,9 @@ async def test_state_restore(hass: HomeAssistant, rfxtrx, state, event) -> None:
 
 async def test_one_sensor_no_datatype(hass: HomeAssistant, rfxtrx) -> None:
     """Test with 1 sensor."""
-    mock_entry = create_rfx_test_entry(devices={"0a52080705020095220269": {}})
+    entry_data = create_rfx_test_cfg(devices={"0a52080705020095220269": {}})
+    mock_entry = MockConfigEntry(domain=DOMAIN, unique_id=DOMAIN, data=entry_data)
+
     mock_entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(mock_entry.entry_id)
@@ -112,12 +121,14 @@ async def test_one_sensor_no_datatype(hass: HomeAssistant, rfxtrx) -> None:
 
 async def test_several_sensors(hass: HomeAssistant, rfxtrx) -> None:
     """Test with 3 sensors."""
-    mock_entry = create_rfx_test_entry(
+    entry_data = create_rfx_test_cfg(
         devices={
             "0a52080705020095220269": {},
             "0a520802060100ff0e0269": {},
         }
     )
+    mock_entry = MockConfigEntry(domain=DOMAIN, unique_id=DOMAIN, data=entry_data)
+
     mock_entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(mock_entry.entry_id)
@@ -257,12 +268,14 @@ async def test_discover_sensor(hass: HomeAssistant, rfxtrx_automatic) -> None:
 
 async def test_update_of_sensors(hass: HomeAssistant, rfxtrx) -> None:
     """Test with 3 sensors."""
-    mock_entry = create_rfx_test_entry(
+    entry_data = create_rfx_test_cfg(
         devices={
             "0a52080705020095220269": {},
             "0a520802060100ff0e0269": {},
         }
     )
+    mock_entry = MockConfigEntry(domain=DOMAIN, unique_id=DOMAIN, data=entry_data)
+
     mock_entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(mock_entry.entry_id)
@@ -299,7 +312,7 @@ async def test_update_of_sensors(hass: HomeAssistant, rfxtrx) -> None:
 
 async def test_rssi_sensor(hass: HomeAssistant, rfxtrx) -> None:
     """Test with 1 sensor."""
-    mock_entry = create_rfx_test_entry(
+    entry_data = create_rfx_test_cfg(
         devices={
             "0913000022670e013b70": {
                 "data_bits": 4,
@@ -309,6 +322,8 @@ async def test_rssi_sensor(hass: HomeAssistant, rfxtrx) -> None:
             "0b1100cd0213c7f230010f71": {},
         }
     )
+    mock_entry = MockConfigEntry(domain=DOMAIN, unique_id=DOMAIN, data=entry_data)
+
     mock_entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(mock_entry.entry_id)

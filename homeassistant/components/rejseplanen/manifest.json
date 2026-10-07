@@ -1,13 +1,10 @@
 {
   "domain": "rejseplanen",
   "name": "Rejseplanen",
-  "codeowners": ["@Jawar19"],
-  "config_flow": true,
+  "codeowners": [],
   "documentation": "https://www.home-assistant.io/integrations/rejseplanen",
-  "integration_type": "service",
   "iot_class": "cloud_polling",
-  "loggers": ["py_rejseplan"],
+  "loggers": ["rjpl"],
   "quality_scale": "legacy",
-  "requirements": ["pyrejseplan==1.0.9"],
-  "single_config_entry": true
+  "requirements": ["rjpl==0.3.6"]
 }

@@ -1,6 +1,6 @@
 {
   "domain": "image_upload",
-  "name": "Image upload",
+  "name": "Image Upload",
   "codeowners": ["@home-assistant/core"],
   "config_flow": false,
   "dependencies": ["http"],

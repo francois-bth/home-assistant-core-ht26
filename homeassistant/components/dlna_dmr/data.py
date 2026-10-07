@@ -1,8 +1,9 @@
 """Data used by this integration."""
+# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 import asyncio
 from collections import defaultdict
-from typing import NamedTuple
+from typing import NamedTuple, cast
 
 from async_upnp_client.aiohttp import AiohttpNotifyServer, AiohttpSessionRequester
 from async_upnp_client.client import UpnpRequester
@@ -13,7 +14,7 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant
 from homeassistant.helpers import aiohttp_client
 
-from .const import DOMAIN_DATA, LOGGER
+from .const import DOMAIN, LOGGER
 
 
 class EventListenAddr(NamedTuple):
@@ -116,15 +117,10 @@ class DlnaDmrData:
 
 
 def get_domain_data(hass: HomeAssistant) -> DlnaDmrData:
-    """Obtain this integration's domain data, creating it if needed.
+    """Obtain this integration's domain data, creating it if needed."""
+    if DOMAIN in hass.data:
+        return cast(DlnaDmrData, hass.data[DOMAIN])
 
-    Creation is deferred to the first caller rather than done at setup, to
-    avoid building DlnaDmrData and its dependencies until a device is
-    actually connected to. This module is imported to run the config flow
-    for any DMR device discovered on the network, including ignored ones.
-    """
-    if (data := hass.data.get(DOMAIN_DATA)) is not None:
-        return data
-
-    data = hass.data[DOMAIN_DATA] = DlnaDmrData(hass)
+    data = DlnaDmrData(hass)
+    hass.data[DOMAIN] = data
     return data

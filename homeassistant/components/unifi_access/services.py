@@ -64,8 +64,7 @@ def _async_get_target(
     )
 
 
-@callback
-def async_setup_services(hass: HomeAssistant) -> None:
+async def async_setup_services(hass: HomeAssistant) -> None:
     """Set up services for the UniFi Access integration."""
 
     async def _handle_set_lock_rule(call: ServiceCall) -> None:

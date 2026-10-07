@@ -27,7 +27,6 @@ from homeassistant.components.climate import (
     SERVICE_SET_TEMPERATURE,
     SWING_OFF,
     SWING_ON,
-    ClimateEntityStateAttribute,
     HVACMode,
 )
 from homeassistant.const import (
@@ -123,7 +122,7 @@ async def test_climate_set_temperature(
     TARGET_TEMP = 25.0
 
     state = hass.states.get("climate.living_room")
-    assert state.attributes[ClimateEntityStateAttribute.TARGET_TEMPERATURE] == 22.0
+    assert state.attributes[ATTR_TEMPERATURE] == 22.0
 
     climate_data["ParametersData"]["PumpTemp"] = f"{TARGET_TEMP:.3f}"
     await hass.services.async_call(
@@ -137,9 +136,7 @@ async def test_climate_set_temperature(
 
     get_client.set_unit_climate_data.assert_called_once()
     state = hass.states.get("climate.living_room")
-    assert (
-        state.attributes[ClimateEntityStateAttribute.TARGET_TEMPERATURE] == TARGET_TEMP
-    )
+    assert state.attributes[ATTR_TEMPERATURE] == TARGET_TEMP
 
 
 async def test_climate_set_hvac_mode(
@@ -175,7 +172,7 @@ async def test_climate_set_fan_mode(
 ) -> None:
     """Test setting fan mode."""
     state = hass.states.get("climate.living_room")
-    assert state.attributes[ClimateEntityStateAttribute.FAN_MODE] == FAN_HIGH
+    assert state.attributes[ATTR_FAN_MODE] == FAN_HIGH
 
     climate_data["ParametersData"]["FanSpeed"] = HA_TO_AP_FAN_MODES[FAN_LOW]
     await hass.services.async_call(
@@ -189,7 +186,7 @@ async def test_climate_set_fan_mode(
 
     get_client.set_unit_climate_data.assert_called_once()
     state = hass.states.get("climate.living_room")
-    assert state.attributes[ClimateEntityStateAttribute.FAN_MODE] == FAN_LOW
+    assert state.attributes[ATTR_FAN_MODE] == FAN_LOW
 
 
 async def test_climate_set_swing_mode(
@@ -200,7 +197,7 @@ async def test_climate_set_swing_mode(
 ) -> None:
     """Test setting swing mode."""
     state = hass.states.get("climate.living_room")
-    assert state.attributes[ClimateEntityStateAttribute.SWING_MODE] == SWING_OFF
+    assert state.attributes[ATTR_SWING_MODE] == SWING_OFF
 
     climate_data["ParametersData"]["Swing"] = HA_TO_AP_SWING_MODES[SWING_ON]
     await hass.services.async_call(
@@ -214,7 +211,7 @@ async def test_climate_set_swing_mode(
 
     get_client.set_unit_climate_data.assert_called_once()
     state = hass.states.get("climate.living_room")
-    assert state.attributes[ClimateEntityStateAttribute.SWING_MODE] == SWING_ON
+    assert state.attributes[ATTR_SWING_MODE] == SWING_ON
 
 
 @pytest.mark.parametrize(
@@ -316,7 +313,7 @@ async def test_climate_set_temperature_api_error(
 ) -> None:
     """Test async_set_temperature handles API error."""
     state = hass.states.get("climate.living_room")
-    assert state.attributes[ClimateEntityStateAttribute.TARGET_TEMPERATURE] == 22.0
+    assert state.attributes[ATTR_TEMPERATURE] == 22.0
 
     get_client.set_unit_climate_data.side_effect = Exception("API Error")
 
@@ -330,7 +327,7 @@ async def test_climate_set_temperature_api_error(
     )
 
     state = hass.states.get("climate.living_room")
-    assert state.attributes[ClimateEntityStateAttribute.TARGET_TEMPERATURE] == 22.0
+    assert state.attributes[ATTR_TEMPERATURE] == 22.0
 
 
 @pytest.mark.parametrize(
@@ -357,7 +354,7 @@ async def test_climate_fan_mode_invalid(
 ) -> None:
     """Test fan_mode with unexpected value."""
     state = hass.states.get("climate.living_room")
-    assert state.attributes[ClimateEntityStateAttribute.FAN_MODE] is None
+    assert state.attributes[ATTR_FAN_MODE] is None
 
 
 @pytest.mark.parametrize(
@@ -383,4 +380,4 @@ async def test_climate_swing_mode_invalid(
 ) -> None:
     """Test swing_mode with unexpected value."""
     state = hass.states.get("climate.living_room")
-    assert state.attributes[ClimateEntityStateAttribute.SWING_MODE] is None
+    assert state.attributes[ATTR_SWING_MODE] is None

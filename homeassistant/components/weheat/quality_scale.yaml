@@ -54,7 +54,7 @@ rules:
 
   # Gold
   devices: done
-  diagnostics: done
+  diagnostics: todo
   discovery-update-info:
     status: exempt
     comment: |
@@ -74,9 +74,9 @@ rules:
     status: todo
     comment: |
       While unlikely to happen. Check if it is easily integrated.
-  entity-category: done
+  entity-category: todo
   entity-device-class: done
-  entity-disabled-by-default: done
+  entity-disabled-by-default: todo
   entity-translations: done
   exception-translations: todo
   icon-translations: done

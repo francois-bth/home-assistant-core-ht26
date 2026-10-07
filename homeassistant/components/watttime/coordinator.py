@@ -4,23 +4,23 @@ from datetime import timedelta
 from typing import override
 
 from aiowatttime import Client
+from aiowatttime.emissions import RealTimeEmissionsResponseType
 from aiowatttime.errors import InvalidCredentialsError, WattTimeError
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_BALANCING_AUTHORITY_ABBREV, DOMAIN, LOGGER
+from .const import DOMAIN, LOGGER
 
 DEFAULT_UPDATE_INTERVAL = timedelta(minutes=5)
 
-type WattTimeData = dict[str, StateType]
 type WattTimeConfigEntry = ConfigEntry[WattTimeCoordinator]
 
 
-class WattTimeCoordinator(DataUpdateCoordinator[WattTimeData]):
+class WattTimeCoordinator(DataUpdateCoordinator[RealTimeEmissionsResponseType]):
     """Coordinator for WattTime data updates."""
 
     config_entry: WattTimeConfigEntry
@@ -42,11 +42,12 @@ class WattTimeCoordinator(DataUpdateCoordinator[WattTimeData]):
         self.client = client
 
     @override
-    async def _async_update_data(self) -> WattTimeData:
+    async def _async_update_data(self) -> RealTimeEmissionsResponseType:
         """Get the latest realtime emissions data."""
         try:
-            data = await self.client.emissions.async_get_realtime_emissions(
-                self.config_entry.data[CONF_BALANCING_AUTHORITY_ABBREV]
+            return await self.client.emissions.async_get_realtime_emissions(
+                self.config_entry.data[CONF_LATITUDE],
+                self.config_entry.data[CONF_LONGITUDE],
             )
         except InvalidCredentialsError as err:
             raise ConfigEntryAuthFailed("Invalid username/password") from err
@@ -54,5 +55,3 @@ class WattTimeCoordinator(DataUpdateCoordinator[WattTimeData]):
             raise UpdateFailed(
                 f"Error while requesting data from WattTime: {err}"
             ) from err
-
-        return {"percent": data["data"][0]["value"]}

@@ -6,7 +6,7 @@ from homeassistant.const import Platform
 
 DOMAIN: Final = "silla_prism"
 
-PLATFORMS: Final = [Platform.SELECT, Platform.SENSOR]
+PLATFORMS: Final = [Platform.SENSOR]
 
 CONF_BASE_TOPIC: Final = "base_topic"
 

@@ -88,6 +88,17 @@ TRANSFER_SCHEMA = vol.Schema(
 
 
 @callback
+def _async_get_device(call: ServiceCall, field: str) -> dr.AnyDeviceEntry:
+    """Get a selected device."""
+    if (device := dr.async_get(call.hass).async_get(call.data[field])) is None:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="invalid_device",
+        )
+    return device
+
+
+@callback
 def _async_get_resource_id(device: dr.AnyDeviceEntry) -> str:
     """Get the Monzo resource ID represented by a device."""
     for domain, resource_id in device.identifiers:
@@ -109,61 +120,65 @@ def _async_resolve_transfer(
     call: ServiceCall,
 ) -> tuple[MonzoCoordinator, str, str]:
     """Resolve and validate the account and pot selected for a transfer."""
-    account_device, account_entry = service.async_get_device_and_config_entry(
-        call.hass, DOMAIN, call.data[ATTR_ACCOUNT]
-    )
-    pot_device, pot_entry = service.async_get_device_and_config_entry(
-        call.hass, DOMAIN, call.data[ATTR_POT]
-    )
-    if account_entry.entry_id != pot_entry.entry_id:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="different_entries",
-        )
+    account_device = _async_get_device(call, ATTR_ACCOUNT)
+    pot_device = _async_get_device(call, ATTR_POT)
     account_id = _async_get_resource_id(account_device)
     pot_id = _async_get_resource_id(pot_device)
 
-    entry = cast(MonzoConfigEntry, account_entry)
-    coordinator = entry.runtime_data.coordinator
-    if (account := coordinator.data.accounts.get(account_id)) is None:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key=(
-                "pot_selected_as_account"
-                if account_id in coordinator.data.pots
-                else "invalid_account"
-            ),
-            translation_placeholders={"device_name": _device_name(account_device)},
+    for entry_id in account_device.config_entries & pot_device.config_entries:
+        config_entry = call.hass.config_entries.async_get_entry(entry_id)
+        if config_entry is None or config_entry.domain != DOMAIN:
+            continue
+
+        entry = cast(
+            MonzoConfigEntry,
+            service.async_get_config_entry(call.hass, DOMAIN, entry_id),
         )
-    if account["type"] in NON_TRANSFER_ACCOUNT_TYPES:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="invalid_transfer_account",
-            translation_placeholders={"device_name": _device_name(account_device)},
-        )
-    if (pot := coordinator.data.pots.get(pot_id)) is None:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key=(
-                "account_selected_as_pot"
-                if pot_id in coordinator.data.accounts
-                else "invalid_pot"
-            ),
-            translation_placeholders={"device_name": _device_name(pot_device)},
-        )
-    if pot["current_account_id"] != account_id:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="pot_account_mismatch",
-            translation_placeholders={
-                "account_name": account["name"],
-                "pot_name": pot["name"],
-                "pot_account_name": coordinator.data.accounts[
-                    pot["current_account_id"]
-                ]["name"],
-            },
-        )
-    return coordinator, account_id, pot_id
+        coordinator = entry.runtime_data.coordinator
+        if (account := coordinator.data.accounts.get(account_id)) is None:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key=(
+                    "pot_selected_as_account"
+                    if account_id in coordinator.data.pots
+                    else "invalid_account"
+                ),
+                translation_placeholders={"device_name": _device_name(account_device)},
+            )
+        if account["type"] in NON_TRANSFER_ACCOUNT_TYPES:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_transfer_account",
+                translation_placeholders={"device_name": _device_name(account_device)},
+            )
+        if (pot := coordinator.data.pots.get(pot_id)) is None:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key=(
+                    "account_selected_as_pot"
+                    if pot_id in coordinator.data.accounts
+                    else "invalid_pot"
+                ),
+                translation_placeholders={"device_name": _device_name(pot_device)},
+            )
+        if pot["current_account_id"] != account_id:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="pot_account_mismatch",
+                translation_placeholders={
+                    "account_name": account["name"],
+                    "pot_name": pot["name"],
+                    "pot_account_name": coordinator.data.accounts[
+                        pot["current_account_id"]
+                    ]["name"],
+                },
+            )
+        return coordinator, account_id, pot_id
+
+    raise ServiceValidationError(
+        translation_domain=DOMAIN,
+        translation_key="different_entries",
+    )
 
 
 async def _async_transfer(

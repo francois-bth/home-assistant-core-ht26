@@ -2,7 +2,8 @@
   "config": {
     "abort": {
       "no_available_devices": "All available devices have already been configured.",
-      "not_intellifire_device": "Not an IntelliFire device."
+      "not_intellifire_device": "Not an IntelliFire device.",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     },
     "error": {
       "api_error": "Login failed"

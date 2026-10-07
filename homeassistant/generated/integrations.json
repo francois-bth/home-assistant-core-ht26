@@ -756,12 +756,6 @@
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
-    "bitvis": {
-      "name": "Bitvis Power Hub",
-      "integration_type": "device",
-      "config_flow": true,
-      "iot_class": "local_push"
-    },
     "bizkaibus": {
       "name": "Bizkaibus",
       "integration_type": "hub",
@@ -1181,7 +1175,7 @@
       "iot_class": "local_push"
     },
     "command_line": {
-      "name": "Command line",
+      "name": "Command Line",
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "local_polling"
@@ -1389,7 +1383,7 @@
       "iot_class": "local_polling"
     },
     "device_sun_light_trigger": {
-      "name": "Presence-based lights",
+      "name": "Presence-based Lights",
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "calculated"
@@ -2255,7 +2249,7 @@
       "iot_class": "local_polling"
     },
     "folder_watcher": {
-      "name": "Folder watcher",
+      "name": "Folder Watcher",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_polling"
@@ -3956,7 +3950,7 @@
       "name": "Liebherr",
       "integration_type": "hub",
       "config_flow": true,
-      "iot_class": "cloud_push"
+      "iot_class": "cloud_polling"
     },
     "lifx": {
       "name": "LIFX",
@@ -4069,7 +4063,7 @@
       "iot_class": "local_polling"
     },
     "local_file": {
-      "name": "Local file",
+      "name": "Local File",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_polling"
@@ -4297,7 +4291,7 @@
       "iot_class": "local_polling"
     },
     "media_extractor": {
-      "name": "Media extractor",
+      "name": "Media Extractor",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "calculated",
@@ -4659,7 +4653,7 @@
           "integration_type": "hub",
           "config_flow": false,
           "iot_class": "local_push",
-          "name": "Manual MQTT alarm control panel"
+          "name": "Manual MQTT Alarm Control Panel"
         },
         "mqtt": {
           "integration_type": "service",
@@ -4683,7 +4677,7 @@
           "integration_type": "hub",
           "config_flow": false,
           "iot_class": "local_push",
-          "name": "MQTT room presence"
+          "name": "MQTT Room Presence"
         },
         "mqtt_statestream": {
           "integration_type": "hub",
@@ -4729,12 +4723,6 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "cloud_polling"
-    },
-    "my_pv": {
-      "name": "my-PV",
-      "integration_type": "device",
-      "config_flow": true,
-      "iot_class": "local_polling"
     },
     "myneomitis": {
       "name": "MyNeomitis",
@@ -6074,10 +6062,9 @@
     },
     "rejseplanen": {
       "name": "Rejseplanen",
-      "integration_type": "service",
-      "config_flow": true,
-      "iot_class": "cloud_polling",
-      "single_config_entry": true
+      "integration_type": "hub",
+      "config_flow": false,
+      "iot_class": "cloud_polling"
     },
     "remember_the_milk": {
       "name": "Remember The Milk",
@@ -6257,7 +6244,7 @@
       "iot_class": "cloud_polling"
     },
     "rss_feed_template": {
-      "name": "RSS feed template",
+      "name": "RSS Feed Template",
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "local_push"
@@ -7046,11 +7033,6 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
-    "steinway_lyngdorf": {
-      "name": "Steinway & Lyngdorf",
-      "integration_type": "virtual",
-      "supported_by": "lyngdorf"
-    },
     "stiebel_eltron": {
       "name": "STIEBEL ELTRON",
       "integration_type": "device",
@@ -7227,7 +7209,7 @@
       "iot_class": "local_push"
     },
     "systemmonitor": {
-      "name": "System monitor",
+      "name": "System Monitor",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_push",
@@ -8226,12 +8208,6 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
-    "willow": {
-      "name": "Willow",
-      "integration_type": "hub",
-      "config_flow": true,
-      "iot_class": "cloud_polling"
-    },
     "wirelesstag": {
       "name": "Wireless Sensor Tags",
       "integration_type": "hub",
@@ -8672,7 +8648,7 @@
       "iot_class": "local_push"
     },
     "manual": {
-      "name": "Manual alarm control panel",
+      "name": "Manual Alarm Control Panel",
       "integration_type": "helper",
       "config_flow": false,
       "iot_class": "calculated"

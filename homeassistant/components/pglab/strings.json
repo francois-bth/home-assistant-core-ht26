@@ -2,7 +2,8 @@
   "config": {
     "abort": {
       "mqtt_not_configured": "Home Assistant MQTT integration not configured.",
-      "mqtt_not_connected": "Home Assistant MQTT integration not connected to MQTT broker."
+      "mqtt_not_connected": "Home Assistant MQTT integration not connected to MQTT broker.",
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
     },
     "step": {
       "confirm_from_mqtt": {

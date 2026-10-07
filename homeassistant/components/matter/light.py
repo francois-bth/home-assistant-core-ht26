@@ -239,16 +239,14 @@ class MatterLight(MatterEntity, LightEntity):
 
         return hs_color
 
-    def _get_color_temperature(self) -> int | None:
+    def _get_color_temperature(self) -> int:
         """Get color temperature from matter."""
 
         color_temp = self.get_matter_attribute_value(
             clusters.ColorControl.Attributes.ColorTemperatureMireds
         )
 
-        if color_temp is None:
-            LOGGER.debug("Got no color temperature for %s", self.entity_id)
-            return None
+        assert color_temp is not None
 
         LOGGER.debug(
             "Got color temperature %s for %s",
@@ -263,10 +261,8 @@ class MatterLight(MatterEntity, LightEntity):
 
         level_control = self._endpoint.get_cluster(clusters.LevelControl)
 
-        if level_control is None:
-            # we should not get here if brightness is not supported
-            LOGGER.debug("Got no level control cluster for %s", self.entity_id)
-            return None
+        # We should not get here if brightness is not supported.
+        assert level_control is not None
 
         LOGGER.debug(
             "Got brightness %s for %s",
@@ -293,15 +289,9 @@ class MatterLight(MatterEntity, LightEntity):
             clusters.ColorControl.Attributes.ColorMode
         )
 
-        if (ha_color_mode := COLOR_MODE_MAP.get(color_mode)) is None:
-            # ColorMode is nullable and a device is free to report a value
-            # outside of the enum, neither of which we can map to a color
-            LOGGER.debug(
-                "Got unexpected color mode (%s) for %s",
-                color_mode,
-                self.entity_id,
-            )
-            return ColorMode.UNKNOWN
+        assert color_mode is not None
+
+        ha_color_mode = COLOR_MODE_MAP[color_mode]
 
         LOGGER.debug(
             "Got color mode (%s) for %s",
@@ -429,14 +419,12 @@ class MatterLight(MatterEntity, LightEntity):
         if self._supports_brightness:
             self._attr_brightness = self._get_brightness()
 
-        if self._supports_color_temperature:
-            # a device without a usable value has no color temperature to
-            # report, rather than the one it gave us last time
-            color_temperature = self._get_color_temperature()
-            self._attr_color_temp_kelvin = (
-                color_util.color_temperature_mired_to_kelvin(color_temperature)
-                if color_temperature
-                else None
+        if (
+            self._supports_color_temperature
+            and (color_temperature := self._get_color_temperature()) > 0
+        ):
+            self._attr_color_temp_kelvin = color_util.color_temperature_mired_to_kelvin(
+                color_temperature
             )
 
         if self._supports_color:

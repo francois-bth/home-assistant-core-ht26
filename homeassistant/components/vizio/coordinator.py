@@ -151,10 +151,10 @@ class VizioDeviceCoordinator(DataUpdateCoordinator[VizioDeviceData]):
             update_interval=SCAN_INTERVAL,
         )
         self.device = device
-        # Modern TV firmware bundles power/input/app state into one endpoint;
+        # Modern firmware bundles power/input/app state into one endpoint;
         # firmware without it never gains it, so probe only until the first
-        # URI_NOT_FOUND response. Audio devices do not support this endpoint.
-        self._use_state_extended = device.profile.has_inputs
+        # URI_NOT_FOUND response.
+        self._use_state_extended = True
 
     @override
     async def _async_setup(self) -> None:

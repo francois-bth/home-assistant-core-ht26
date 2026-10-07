@@ -16,7 +16,7 @@ PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.UPDATE]
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up immich integration."""
-    async_setup_services(hass)
+    await async_setup_services(hass)
     return True
 
 

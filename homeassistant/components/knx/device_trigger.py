@@ -2,18 +2,19 @@
 
 from typing import Any, Final
 
-import probatio
+import voluptuous as vol
 
 from homeassistant.components.device_automation import (
     DEVICE_TRIGGER_BASE_SCHEMA,
     InvalidDeviceAutomationConfig,
 )
 from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM, CONF_TYPE
-from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers import selector
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
+from . import trigger
 from .const import DOMAIN, KNX_MODULE_KEY
 from .trigger import (
     CONF_KNX_DESTINATION,
@@ -22,19 +23,19 @@ from .trigger import (
     CONF_KNX_GROUP_VALUE_WRITE,
     CONF_KNX_INCOMING,
     CONF_KNX_OUTGOING,
+    PLATFORM_TYPE_TRIGGER_TELEGRAM,
     TELEGRAM_TRIGGER_SCHEMA,
-    async_subscribe_telegrams,
+    TRIGGER_SCHEMA as TRIGGER_TRIGGER_SCHEMA,
 )
 
 TRIGGER_TELEGRAM: Final = "telegram"
 
 TRIGGER_SCHEMA: Final = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     {
-        probatio.Required(CONF_TYPE): TRIGGER_TELEGRAM,
+        vol.Required(CONF_TYPE): TRIGGER_TELEGRAM,
         **TELEGRAM_TRIGGER_SCHEMA,
     }
 )
-_TELEGRAM_OPTIONS_SCHEMA: Final = probatio.Schema(TELEGRAM_TRIGGER_SCHEMA)
 
 
 async def async_get_triggers(
@@ -61,7 +62,7 @@ async def async_get_triggers(
 
 async def async_get_trigger_capabilities(
     hass: HomeAssistant, config: ConfigType
-) -> dict[str, probatio.Schema]:
+) -> dict[str, vol.Schema]:
     """List trigger capabilities."""
     project = hass.data[KNX_MODULE_KEY].project
     options = [
@@ -69,9 +70,9 @@ async def async_get_trigger_capabilities(
         for ga in project.group_addresses.values()
     ]
     return {
-        "extra_fields": probatio.Schema(
+        "extra_fields": vol.Schema(
             {
-                probatio.Optional(CONF_KNX_DESTINATION): selector.SelectSelector(
+                vol.Optional(CONF_KNX_DESTINATION): selector.SelectSelector(
                     selector.SelectSelectorConfig(
                         mode=selector.SelectSelectorMode.DROPDOWN,
                         multiple=True,
@@ -79,19 +80,19 @@ async def async_get_trigger_capabilities(
                         options=options,
                     ),
                 ),
-                probatio.Optional(
+                vol.Optional(
                     CONF_KNX_GROUP_VALUE_WRITE, default=True
                 ): selector.BooleanSelector(),
-                probatio.Optional(
+                vol.Optional(
                     CONF_KNX_GROUP_VALUE_RESPONSE, default=True
                 ): selector.BooleanSelector(),
-                probatio.Optional(
+                vol.Optional(
                     CONF_KNX_GROUP_VALUE_READ, default=True
                 ): selector.BooleanSelector(),
-                probatio.Optional(
+                vol.Optional(
                     CONF_KNX_INCOMING, default=True
                 ): selector.BooleanSelector(),
-                probatio.Optional(
+                vol.Optional(
                     CONF_KNX_OUTGOING, default=True
                 ): selector.BooleanSelector(),
             }
@@ -106,26 +107,20 @@ async def async_attach_trigger(
     trigger_info: TriggerInfo,
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
-    # Remove device trigger specific fields
-    telegram_options = {
+    # Remove device trigger specific fields and add trigger platform identifier
+    trigger_config = {
         key: config[key] for key in (config.keys() & TELEGRAM_TRIGGER_SCHEMA.keys())
-    }
+    } | {CONF_PLATFORM: PLATFORM_TYPE_TRIGGER_TELEGRAM}
 
     try:
-        telegram_options = _TELEGRAM_OPTIONS_SCHEMA(telegram_options)
-    except probatio.Invalid as err:
+        trigger_config = TRIGGER_TRIGGER_SCHEMA(trigger_config)
+    except vol.Invalid as err:
         raise InvalidDeviceAutomationConfig(
             translation_domain=DOMAIN,
             translation_key="device_trigger_invalid_config",
             translation_placeholders={"error": str(err)},
         ) from err
 
-    job = HassJob(action, f"KNX device trigger {trigger_info}")
-    trigger_data = trigger_info["trigger_data"]
-
-    @callback
-    def async_telegram_received(telegram_data: dict[str, Any]) -> None:
-        """Run the action for a matching telegram."""
-        hass.async_run_hass_job(job, {"trigger": {**trigger_data, **telegram_data}})
-
-    return async_subscribe_telegrams(hass, telegram_options, async_telegram_received)
+    return await trigger.async_attach_trigger(
+        hass, config=trigger_config, action=action, trigger_info=trigger_info
+    )

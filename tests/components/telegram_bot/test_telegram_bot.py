@@ -26,6 +26,7 @@ from telegram.error import (
     TimedOut,
 )
 
+from homeassistant.components.telegram_bot import ATTR_LATITUDE, ATTR_LONGITUDE
 from homeassistant.components.telegram_bot.bot import ALLOWED_UPDATES
 from homeassistant.components.telegram_bot.const import (
     ATTR_AUTHENTICATION,
@@ -91,8 +92,6 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_DOMAIN,
     ATTR_ENTITY_ID,
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
     ATTR_SERVICE,
     CONF_API_KEY,
     CONF_PLATFORM,

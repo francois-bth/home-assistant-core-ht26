@@ -11,53 +11,32 @@
   },
   "entity": {
     "sensor": {
-      "all_in_average_price": {
-        "name": "Average all-in price"
-      },
-      "all_in_current_price": {
-        "name": "Current all-in price"
-      },
-      "all_in_max_price": {
-        "name": "Maximum all-in price"
-      },
-      "all_in_min_price": {
-        "name": "Minimum all-in price"
-      },
-      "all_in_next_price": {
-        "name": "Next all-in price"
-      },
       "average_price": {
-        "name": "Average market price"
+        "name": "Average - today"
       },
       "current_hour_price": {
         "name": "Current hour"
       },
-      "current_price": {
-        "name": "Current market price"
-      },
       "highest_price_time": {
-        "name": "Highest market price time"
+        "name": "Time of highest price - today"
       },
       "hours_priced_equal_or_lower": {
-        "name": "Market periods priced equal or lower"
+        "name": "Hours priced equal or lower than current - today"
       },
       "lowest_price_time": {
-        "name": "Lowest market price time"
+        "name": "Time of lowest price - today"
       },
       "max_price": {
-        "name": "Maximum market price"
+        "name": "Highest price - today"
       },
       "min_price": {
-        "name": "Minimum market price"
+        "name": "Lowest price - today"
       },
       "next_hour_price": {
         "name": "Next hour"
       },
-      "next_price": {
-        "name": "Next market price"
-      },
       "percentage_of_max": {
-        "name": "Market percentage of maximum"
+        "name": "Current percentage of highest price - today"
       }
     }
   },
@@ -70,23 +49,6 @@
     },
     "no_data": {
       "message": "No price data available for {date}."
-    }
-  },
-  "options": {
-    "step": {
-      "init": {
-        "data": {
-          "electricity_price_interval": "Electricity price interval"
-        }
-      }
-    }
-  },
-  "selector": {
-    "electricity_price_interval": {
-      "options": {
-        "hourly": "Hourly",
-        "quarter_hourly": "Quarter-hourly"
-      }
     }
   },
   "services": {

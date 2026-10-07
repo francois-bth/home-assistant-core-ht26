@@ -1,6 +1,6 @@
 {
   "domain": "local_calendar",
-  "name": "Local calendar",
+  "name": "Local Calendar",
   "codeowners": ["@allenporter"],
   "config_flow": true,
   "dependencies": ["file_upload"],

@@ -35,7 +35,6 @@ async def test_entry_diagnostics(
                     "id": "HA folder ID",
                     "name": "HA folder name",
                     "description": json.dumps(mock_agent_backup.as_dict()),
-                    "size": str(int(mock_agent_backup.size)),
                 }
             ]
         }

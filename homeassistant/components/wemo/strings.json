@@ -1,5 +1,8 @@
 {
   "config": {
+    "abort": {
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+    },
     "step": {
       "confirm": {
         "description": "Do you want to set up Wemo?"

@@ -49,31 +49,36 @@ async def test_setup_entry_auth_failed(
     assert entry.state is ConfigEntryState.SETUP_ERROR
 
 
+async def test_setup_entry_ethernet_unauthorized_retries(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_pysaj_saj: MagicMock,
+) -> None:
+    """Ethernet UnauthorizedException is treated as not ready (e.g. wrong type)."""
+    mock_pysaj_saj.read.side_effect = pysaj.UnauthorizedException("unexpected")
+    entry = await setup_integration(hass, mock_config_entry)
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+
+
 @pytest.mark.parametrize(
     "exception",
     [
-        pytest.param(
-            pysaj.UnauthorizedException("unexpected"), id="ethernet_unauthorized"
-        ),
-        pytest.param(
-            pysaj.UnexpectedResponseException("bad response"), id="unexpected_response"
-        ),
-        pytest.param(TimeoutError("timed out"), id="timeout"),
-        pytest.param(OSError("network unreachable"), id="os_error"),
-        pytest.param(Exception("Unexpected error"), id="unexpected"),
-        pytest.param(RuntimeError("Unexpected runtime error"), id="runtime_error"),
+        Exception("Unexpected error"),
+        RuntimeError("Unexpected runtime error"),
     ],
 )
-async def test_setup_entry_retries(
+async def test_setup_entry_unexpected_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_pysaj_saj: MagicMock,
     exception: Exception,
 ) -> None:
-    """Test errors during setup result in a retry."""
+    """Test async_setup_entry handles unexpected errors."""
     mock_pysaj_saj.read.side_effect = exception
     entry = await setup_integration(hass, mock_config_entry)
-    assert entry.state is ConfigEntryState.SETUP_RETRY
+    # Truly unexpected exceptions should result in SETUP_ERROR
+    # so the actual error is visible rather than being hidden
+    assert entry.state is ConfigEntryState.SETUP_ERROR
 
 
 @pytest.mark.usefixtures("mock_pysaj_saj")

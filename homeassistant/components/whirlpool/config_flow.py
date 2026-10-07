@@ -66,9 +66,7 @@ async def authenticate(
 
     if check_appliances_exist:
         appliances_manager = AppliancesManager(backend_selector, auth, session)
-        if not await appliances_manager.connect():
-            return "cannot_connect"
-        await appliances_manager.disconnect()
+        await appliances_manager.fetch_appliances()
 
         if (
             not appliances_manager.aircons

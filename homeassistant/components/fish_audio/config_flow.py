@@ -362,7 +362,6 @@ class FishAudioSubentryFlowHandler(ConfigSubentryFlow):
                     self._get_reconfigure_subentry(),
                     data=self.config_data,
                     unique_id=unique_id,
-                    reason="reconfigure_successful",
                 )
 
         return self.async_show_form(

@@ -11,6 +11,7 @@ from homeassistant.components.sensor import (
     CONF_STATE_CLASS,
     DEVICE_CLASS_STATE_CLASSES,
     DEVICE_CLASS_UNITS,
+    SensorStateClass,
 )
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
@@ -323,7 +324,14 @@ def generate_schema(domain: str, flow_type: str) -> vol.Schema:
             vol.Optional(CONF_DEVICE_CLASS): selector.DeviceClassSelector(
                 selector.DeviceClassSelectorConfig(domain=Platform.SENSOR),
             ),
-            vol.Optional(CONF_STATE_CLASS): selector.StateClassSelector(),
+            vol.Optional(CONF_STATE_CLASS): selector.SelectSelector(
+                selector.SelectSelectorConfig(
+                    options=[cls.value for cls in SensorStateClass],
+                    mode=selector.SelectSelectorMode.DROPDOWN,
+                    translation_key="sensor_state_class",
+                    sort=True,
+                ),
+            ),
         }
 
     if domain == Platform.SWITCH:

@@ -204,10 +204,10 @@ def _validate_set_system_mode_params(tcs: ControlSystem, data: dict[str, Any]) -
 
 
 @callback
-def async_setup_services(
+def setup_service_functions(
     hass: HomeAssistant, coordinator: EvoDataUpdateCoordinator
 ) -> None:
-    """Register the Evohome services."""
+    """Set up the service handlers for Evohome systems."""
 
     @verify_domain_control(DOMAIN)
     async def force_refresh(call: ServiceCall) -> None:

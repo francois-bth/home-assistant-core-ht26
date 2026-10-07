@@ -1,12 +1,20 @@
 """The Miele integration."""
 
+from aiohttp import ClientError
 from pymiele import MieleAPI
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    OAuth2TokenRequestError,
+    OAuth2TokenRequestReauthError,
+)
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import (
+    ImplementationUnavailableError,
     OAuth2Session,
     async_get_config_entry_implementation,
 )
@@ -39,18 +47,33 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up service actions."""
-    async_setup_services(hass)
+    await async_setup_services(hass)
 
     return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: MieleConfigEntry) -> bool:
     """Set up Miele from a config entry."""
-    implementation = await async_get_config_entry_implementation(hass, entry)
+    try:
+        implementation = await async_get_config_entry_implementation(hass, entry)
+    except ImplementationUnavailableError as err:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="oauth2_implementation_unavailable",
+        ) from err
 
     session = OAuth2Session(hass, entry, implementation)
     auth = AsyncConfigEntryAuth(async_get_clientsession(hass), session)
-    await auth.async_get_access_token()
+    try:
+        await auth.async_get_access_token()
+    except OAuth2TokenRequestReauthError as err:
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN, translation_key="config_entry_auth_failed"
+        ) from err
+    except (OAuth2TokenRequestError, ClientError) as err:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN, translation_key="config_entry_not_ready"
+        ) from err
 
     # Setup MieleAPI and coordinator for data fetch
     _api = MieleAPI(auth)

@@ -19,7 +19,6 @@ from .const import (
     SERVICE_DOCK,
     SERVICE_PAUSE,
     SERVICE_START_MOWING,
-    SERVICE_STOP,
     LawnMowerActivity,
     LawnMowerEntityFeature,
 )
@@ -51,9 +50,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
     component.async_register_entity_service(
         SERVICE_DOCK, None, "async_dock", [LawnMowerEntityFeature.DOCK]
-    )
-    component.async_register_entity_service(
-        SERVICE_STOP, None, "async_stop", [LawnMowerEntityFeature.STOP]
     )
 
     return True
@@ -127,11 +123,3 @@ class LawnMowerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     async def async_pause(self) -> None:
         """Pause the lawn mower."""
         await self.hass.async_add_executor_job(self.pause)
-
-    def stop(self) -> None:
-        """Stop the lawn mower."""
-        raise NotImplementedError
-
-    async def async_stop(self) -> None:
-        """Stop the lawn mower."""
-        await self.hass.async_add_executor_job(self.stop)

@@ -5,7 +5,7 @@ from homeassistant.core import HomeAssistant
 
 from .coordinator import LibrenmsConfigEntry, LibrenmsDataUpdateCoordinator
 
-PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR]
+PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: LibrenmsConfigEntry) -> bool:

@@ -1,13 +1,12 @@
 """Configuration flow for CalDav."""
 
 from collections.abc import Mapping
-from functools import partial
 import logging
 from typing import Any, override
 
-from caldav.davclient import DAVClient
+import caldav
 from caldav.lib.error import AuthorizationError, DAVError
-from caldav.lib.http_sync import requests as caldav_requests
+import requests
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -62,18 +61,15 @@ class CalDavConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def _test_connection(self, user_input: dict[str, Any]) -> str | None:
         """Test the connection to the CalDAV server and return an error if any."""
-        client = await self.hass.async_add_executor_job(
-            partial(
-                DAVClient,
-                user_input[CONF_URL],
-                username=user_input[CONF_USERNAME],
-                password=user_input[CONF_PASSWORD],
-                ssl_verify_cert=user_input[CONF_VERIFY_SSL],
-                timeout=TIMEOUT,
-            )
+        client = caldav.DAVClient(
+            user_input[CONF_URL],
+            username=user_input[CONF_USERNAME],
+            password=user_input[CONF_PASSWORD],
+            ssl_verify_cert=user_input[CONF_VERIFY_SSL],
+            timeout=TIMEOUT,
         )
         try:
-            await self.hass.async_add_executor_job(client.get_principal)
+            await self.hass.async_add_executor_job(client.principal)
         except AuthorizationError as err:
             _LOGGER.warning("Authorization Error connecting to CalDAV server: %s", err)
             if err.reason == "Unauthorized":
@@ -81,10 +77,10 @@ class CalDavConfigFlow(ConfigFlow, domain=DOMAIN):
             # AuthorizationError can be raised if the url is incorrect or
             # on some other unexpected server response.
             return "cannot_connect"
-        except caldav_requests.exceptions.Timeout as err:
+        except requests.Timeout as err:
             _LOGGER.warning("Timeout connecting to CalDAV server: %s", err)
             return "cannot_connect"
-        except caldav_requests.exceptions.ConnectionError as err:
+        except requests.ConnectionError as err:
             _LOGGER.warning("Connection Error connecting to CalDAV server: %s", err)
             return "cannot_connect"
         except DAVError as err:

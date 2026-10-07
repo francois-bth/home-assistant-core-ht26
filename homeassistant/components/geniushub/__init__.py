@@ -23,7 +23,7 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
-from .services import async_setup_services
+from .services import setup_service_functions
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,7 +48,7 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Genius Hub services."""
-    async_setup_services(hass)
+    setup_service_functions(hass)
     return True
 
 

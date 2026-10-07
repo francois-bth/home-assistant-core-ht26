@@ -35,7 +35,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
-from .conftest import MOCK_DEVICE, MOCK_DEVICE_STATE, SSEStreamHelper
+from .conftest import MOCK_DEVICE, MOCK_DEVICE_STATE
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
@@ -92,16 +92,18 @@ async def test_covers(
 async def test_cover_state_after_poll(
     hass: HomeAssistant,
     mock_liebherr_client: MagicMock,
-    sse_helper: SSEStreamHelper,
+    freezer: FrozenDateTimeFactory,
     door_state: DoorState | None,
     expected_state: str,
 ) -> None:
-    """Test cover state after an SSE push with different door states."""
+    """Test cover state after polling different door states."""
     mock_liebherr_client.get_device_state.side_effect = lambda *a, **kw: (
         _mock_door_state(door_state)
     )
 
-    await sse_helper.async_push()
+    freezer.tick(timedelta(seconds=61))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
     state = hass.states.get(ENTITY_ID)
     assert state is not None
@@ -119,7 +121,6 @@ async def test_cover_state_after_poll(
 async def test_cover_service_calls(
     hass: HomeAssistant,
     mock_liebherr_client: MagicMock,
-    sse_helper: SSEStreamHelper,
     service: str,
     door_state: DoorState,
     expected_state: str,
@@ -143,9 +144,6 @@ async def test_cover_service_calls(
         value=expected_value,
     )
 
-    # Push the confirmed state via SSE to clear the optimistic state
-    await sse_helper.async_push()
-
     state = hass.states.get(ENTITY_ID)
     assert state is not None
     assert state.state == expected_state
@@ -155,9 +153,9 @@ async def test_cover_service_calls(
 async def test_cover_state_settles_after_poll(
     hass: HomeAssistant,
     mock_liebherr_client: MagicMock,
-    sse_helper: SSEStreamHelper,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test door state settles correctly across command and subsequent push."""
+    """Test door state settles correctly across command and subsequent poll."""
     mock_liebherr_client.get_device_state.side_effect = lambda *a, **kw: (
         _mock_door_state(DoorState.OPEN)
     )
@@ -169,18 +167,18 @@ async def test_cover_state_settles_after_poll(
         blocking=True,
     )
 
-    await sse_helper.async_push()
-
     state = hass.states.get(ENTITY_ID)
     assert state is not None
     assert state.state == STATE_OPEN
 
-    # Door closes on next stream event
+    # Door closes on next scheduled poll
     mock_liebherr_client.get_device_state.side_effect = lambda *a, **kw: (
         _mock_door_state(DoorState.CLOSED)
     )
 
-    await sse_helper.async_push()
+    freezer.tick(timedelta(seconds=61))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
     state = hass.states.get(ENTITY_ID)
     assert state is not None
@@ -225,7 +223,7 @@ async def test_cover_failure(
 async def test_cover_when_control_missing(
     hass: HomeAssistant,
     mock_liebherr_client: MagicMock,
-    sse_helper: SSEStreamHelper,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test cover entity behavior when auto door control is removed."""
     state = hass.states.get(ENTITY_ID)
@@ -237,7 +235,9 @@ async def test_cover_when_control_missing(
         device=MOCK_DEVICE, controls=[]
     )
 
-    await sse_helper.async_reconnect()
+    freezer.tick(timedelta(seconds=61))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
     state = hass.states.get(ENTITY_ID)
     assert state is not None

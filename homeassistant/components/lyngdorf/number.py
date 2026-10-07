@@ -26,6 +26,9 @@ PARALLEL_UPDATES = 1
 class LyngdorfNumberEntityDescription(NumberEntityDescription):
     """Describe a Lyngdorf number entity."""
 
+    # Whether the model has this control at all. Must not depend on the device
+    # having reported a value, or the entity is dropped at startup.
+    range_fn: Callable[[LyngdorfReceiver], NumericRange | None]
     control_fn: Callable[[LyngdorfReceiver], NumericControl | None]
     set_value_fn: Callable[[NumericControl, float], Awaitable[None]]
 
@@ -37,6 +40,7 @@ NUMBER_ENTITIES: tuple[LyngdorfNumberEntityDescription, ...] = (
         device_class=NumberDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.MILLISECONDS,
         entity_category=EntityCategory.CONFIG,
+        range_fn=lambda r: r.lipsync_range,
         control_fn=lambda r: r.lipsync,
         # The device takes lip sync as whole milliseconds.
         set_value_fn=lambda c, v: c.set(round(v)),
@@ -46,6 +50,7 @@ NUMBER_ENTITIES: tuple[LyngdorfNumberEntityDescription, ...] = (
         translation_key="trim_bass",
         native_unit_of_measurement=UnitOfSoundPressure.DECIBEL,
         entity_category=EntityCategory.CONFIG,
+        range_fn=lambda r: c.range if (c := r.trims.get(Trim.BASS)) else None,
         control_fn=lambda r: r.trims.get(Trim.BASS),
         set_value_fn=lambda c, v: c.set(v),
     ),
@@ -54,6 +59,7 @@ NUMBER_ENTITIES: tuple[LyngdorfNumberEntityDescription, ...] = (
         translation_key="trim_treble",
         native_unit_of_measurement=UnitOfSoundPressure.DECIBEL,
         entity_category=EntityCategory.CONFIG,
+        range_fn=lambda r: c.range if (c := r.trims.get(Trim.TREBLE)) else None,
         control_fn=lambda r: r.trims.get(Trim.TREBLE),
         set_value_fn=lambda c, v: c.set(v),
     ),
@@ -63,6 +69,7 @@ NUMBER_ENTITIES: tuple[LyngdorfNumberEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         native_unit_of_measurement=UnitOfSoundPressure.DECIBEL,
         entity_category=EntityCategory.CONFIG,
+        range_fn=lambda r: c.range if (c := r.trims.get(Trim.CENTER)) else None,
         control_fn=lambda r: r.trims.get(Trim.CENTER),
         set_value_fn=lambda c, v: c.set(v),
     ),
@@ -72,6 +79,7 @@ NUMBER_ENTITIES: tuple[LyngdorfNumberEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         native_unit_of_measurement=UnitOfSoundPressure.DECIBEL,
         entity_category=EntityCategory.CONFIG,
+        range_fn=lambda r: c.range if (c := r.trims.get(Trim.HEIGHT)) else None,
         control_fn=lambda r: r.trims.get(Trim.HEIGHT),
         set_value_fn=lambda c, v: c.set(v),
     ),
@@ -81,6 +89,7 @@ NUMBER_ENTITIES: tuple[LyngdorfNumberEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         native_unit_of_measurement=UnitOfSoundPressure.DECIBEL,
         entity_category=EntityCategory.CONFIG,
+        range_fn=lambda r: c.range if (c := r.trims.get(Trim.LFE)) else None,
         control_fn=lambda r: r.trims.get(Trim.LFE),
         set_value_fn=lambda c, v: c.set(v),
     ),
@@ -90,6 +99,7 @@ NUMBER_ENTITIES: tuple[LyngdorfNumberEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         native_unit_of_measurement=UnitOfSoundPressure.DECIBEL,
         entity_category=EntityCategory.CONFIG,
+        range_fn=lambda r: c.range if (c := r.trims.get(Trim.SURROUND)) else None,
         control_fn=lambda r: r.trims.get(Trim.SURROUND),
         set_value_fn=lambda c, v: c.set(v),
     ),
@@ -108,7 +118,7 @@ async def async_setup_entry(
     async_add_entities(
         LyngdorfNumber(receiver, config_entry, runtime_data.device_info, description)
         for description in NUMBER_ENTITIES
-        if description.control_fn(receiver) is not None
+        if description.range_fn(receiver) is not None
     )
 
 
@@ -134,11 +144,11 @@ class LyngdorfNumber(LyngdorfEntity, NumberEntity):
     @property
     def _range(self) -> NumericRange:
         """Return the device's range for this setting."""
-        control = self.entity_description.control_fn(self._receiver)
+        device_range = self.entity_description.range_fn(self._receiver)
         # Entities are only created for controls the model actually has.
         if TYPE_CHECKING:
-            assert control is not None
-        return control.range
+            assert device_range is not None
+        return device_range
 
     @override
     @property

@@ -1,6 +1,5 @@
 """Diagnostics for MELCloud Home integration."""
 
-from dataclasses import asdict
 from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
@@ -31,7 +30,7 @@ async def async_get_config_entry_diagnostics(
             config_entry.runtime_data.coordinator.data.model_dump(mode="json"),
             TO_REDACT,
         ),
-        "telemetry_coordinator": async_redact_data(
-            asdict(config_entry.runtime_data.telemetry_coordinator.data), TO_REDACT
+        "energy_coordinator": async_redact_data(
+            config_entry.runtime_data.energy_coordinator.data, TO_REDACT
         ),
     }
