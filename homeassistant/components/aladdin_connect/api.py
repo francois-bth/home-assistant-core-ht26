@@ -1,3 +1,5 @@
+"""API for Aladdin Connect Genie bound to Home Assistant OAuth."""
+
 import os
 from typing import cast, override
 
@@ -18,7 +20,7 @@ class AsyncConfigFlowAuth(Auth):
             websession,
             API_URL,
             access_token,
-            os.environ.get("ALADDIN_API_KEY"),
+            os.environ.get("ALADDIN_API_KEY", ""),
         )
 
     @override
@@ -40,7 +42,7 @@ class AsyncConfigEntryAuth(Auth):
             websession,
             API_URL,
             oauth_session.token["access_token"],
-            os.environ.get("ALADDIN_API_KEY"),
+            os.environ.get("ALADDIN_API_KEY", ""),
         )
         self._oauth_session = oauth_session
 
